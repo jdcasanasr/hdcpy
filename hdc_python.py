@@ -1,5 +1,5 @@
 import numpy as np
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 # Generate "binary", random hypervector.
 # ToDo: Generalize for other VSA
@@ -8,8 +8,8 @@ def generate_hypervector(dimensionality):
 
 # Compute Hamming distance between hypervectors,
 # generated via the 'generate_hypervector' function.
-def hamming_distance(u, v):
-    return np.count_nonzero(np.logical_xor(u, v))
+def hamming_distance(u, v, dimensionality):
+    return np.count_nonzero(np.logical_xor(u, v)) / dimensionality
 
 # Basic HDC Operations
 def bind(u, v):
@@ -21,19 +21,11 @@ def bundle(u, v):
 def permute(u, amount):
     return np.roll(u, amount)
 
-experiments = 100
+dimensionality  = 10000
+experiments     = 100
 
-delta_array             = []
-dimensionality_array    = []
+for experiment in range(experiments):
+    u = generate_hypervector(dimensionality)
+    v = generate_hypervector(dimensionality)
 
-for dimensionality in range(start, stop, step):
-    for experiment in range(experiments):
-        u = generate_hypervector(dimensionality)
-        v = generate_hypervector(dimensionality)
-
-        delta_array.append(hamming_distance(u, v))
-
-plt.plot(delta_array)
-plt.xlabel('Dimensionality')
-plt.ylabel('Hamming Distance')
-plt.show()
+    print(str(hamming_distance(u, v, dimensionality)))
