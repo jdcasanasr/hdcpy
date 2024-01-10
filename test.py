@@ -1,70 +1,46 @@
+from hdcpy import *
 import numpy as np
-import matplotlib.pyplot as plt
 
-# Generate "binary", random hypervector.
-# ToDo: Generalize for other VSA
-def generate_hypervector(dimensionality):
-    return np.random.randint(0, 2, dimensionality, np.byte)
+def flip_random_positions(hypervector, dimensionality, number_positions):
+    flip_positions      = []
+    flip_hypervector    = hypervector.copy()
 
-# Compute Hamming distance between hypervectors,
-# generated via the 'generate_hypervector' function.
-def hamming_distance(u, v, dimensionality):
-    return np.count_nonzero(np.logical_xor(u, v)) / dimensionality
+    #for _ in range(number_positions):
+    rng             = np.random.default_rng()
+    flip_positions  = rng.choice(dimensionality, size = number_positions, replace = False)
 
-# Basic HDC Operations
-def bind(u, v):
-    return np.logical_xor(u, v)
+        #flip_positions.append(np.random.randint(0, dimensionality))
 
-def bundle(u, v):
-    return np.where((u + v) >= 2, 1, 0)
+    for position in flip_positions:
+        flip_hypervector[position] = np.logical_not(hypervector[position])
 
-def permute(u, amount):
-    return np.roll(u, amount)
+    return flip_hypervector
 
-# Take two hypervectors at random and compute
-# their Hamming distance.
-def experiment(dimensionality):
+def generate_level_hypervectors(seed_hypervector, dimensionality, levels):
+    level_hypervectors  = []
+    number_positions    = int(dimensionality / levels)
+    dummy_hypervector   = seed_hypervector
+
+    level_hypervectors.append(seed_hypervector)
+
+    for _ in range(1, levels):
+        dummy_hypervector = flip_random_positions(dummy_hypervector, dimensionality, number_positions)
+        level_hypervectors.append(dummy_hypervector)
+
+    return level_hypervectors
+
+dimensionality      = 10
+levels              = 20
+seed_hypervector    = generate_hypervector(dimensionality)
+number_positions    = 5
+
+#level_array = generate_level_hypervectors(seed_hypervector, dimensionality, levels)
+
+#print(str(seed_hypervector))
+#print(str(flip_random_positions(seed_hypervector, dimensionality, 5)))
+
+for _ in range(levels):
     u = generate_hypervector(dimensionality)
-    v = generate_hypervector(dimensionality)
+    v = flip_random_positions(u, dimensionality, number_positions)
 
-    return hamming_distance(u, v, dimensionality)
-
-def binding_experiment(dimensionality):
-    u = generate_hypervector(dimensionality)
-    v = generate_hypervector(dimensionality)
-
-    bound_hypervector = bind(u, v)
-
-    delta_u = hamming_distance(u, bound_hypervector, dimensionality)
-    delta_v = hamming_distance(v, bound_hypervector, dimensionality)
-
-    return delta_u, delta_v
-
-def bundling_experiment(dimensionality):
-    u = generate_hypervector(dimensionality)
-    v = generate_hypervector(dimensionality)
-
-    bundled_hypervector = bundle(u, v)
-
-    delta_u = hamming_distance(u, bundled_hypervector, dimensionality)
-    delta_v = hamming_distance(v, bundled_hypervector, dimensionality)
-
-    return delta_u, delta_v
-
-# Find the class hypervector matching the
-# minimum distance with a query vector.
-def find_class(associative_memory, query_hypervector, dimensionality):
-    minimum_distance = 1.0
-    
-    for class_hypervector in associative_memory:
-        delta = hamming_distance(query_hypervector, class_hypervector, dimensionality)
-
-        if (delta < minimum_distance):
-            minimum_distance = delta
-
-    return minimum_distance
-
-pdf = np.random.binomial(10000, 0.5, 1000)
-
-plt.plot(pdf)
-plt.show()
+    print('%0.5f' % hamming_distance(u, v, dimensionality))
