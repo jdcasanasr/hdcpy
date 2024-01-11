@@ -1,46 +1,23 @@
 from hdcpy import *
 import numpy as np
 
-def flip_random_positions(hypervector, dimensionality, number_positions):
-    flip_positions      = []
-    flip_hypervector    = hypervector.copy()
+dimensionality      = 50
+levels              = 13
+seed_hypervector = generate_hypervector(dimensionality)
 
-    #for _ in range(number_positions):
-    rng             = np.random.default_rng()
-    flip_positions  = rng.choice(dimensionality, size = number_positions, replace = False)
+upper_limit     = 1
+lower_limit     = -1
+number_levels   = 12
+sample          = 0.34
 
-        #flip_positions.append(np.random.randint(0, dimensionality))
+# Assume upper_limit = 1 and lower_limit = -1 for VoiceHD.
+def quantize(sample, upper_limit, lower_limit, number_levels):
+    quantized_range = np.linspace(lower_limit, upper_limit, number_levels)
+    quantized_index = np.digitize(sample, quantized_range, True)
 
-    for position in flip_positions:
-        flip_hypervector[position] = np.logical_not(hypervector[position])
+    return quantized_index
 
-    return flip_hypervector
+level_array     = generate_level_hypervectors(seed_hypervector, dimensionality, levels)
+quantized_index = quantize(sample, upper_limit, lower_limit, number_levels)
 
-def generate_level_hypervectors(seed_hypervector, dimensionality, levels):
-    level_hypervectors  = []
-    number_positions    = int(dimensionality / levels)
-    dummy_hypervector   = seed_hypervector
-
-    level_hypervectors.append(seed_hypervector)
-
-    for _ in range(1, levels):
-        dummy_hypervector = flip_random_positions(dummy_hypervector, dimensionality, number_positions)
-        level_hypervectors.append(dummy_hypervector)
-
-    return level_hypervectors
-
-dimensionality      = 10
-levels              = 20
-seed_hypervector    = generate_hypervector(dimensionality)
-number_positions    = 5
-
-#level_array = generate_level_hypervectors(seed_hypervector, dimensionality, levels)
-
-#print(str(seed_hypervector))
-#print(str(flip_random_positions(seed_hypervector, dimensionality, 5)))
-
-for _ in range(levels):
-    u = generate_hypervector(dimensionality)
-    v = flip_random_positions(u, dimensionality, number_positions)
-
-    print('%0.5f' % hamming_distance(u, v, dimensionality))
+print(level_array[quantized_index])
