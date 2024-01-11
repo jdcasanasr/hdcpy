@@ -58,6 +58,14 @@ def generate_level_hypervectors(seed_hypervector, dimensionality, levels):
 
     return level_hypervectors
 
+# Divide a given [lower_limit, upper_limit] range into even chunks.
+def quantize_range(lower_limit, upper_limit, number_levels):
+    return np.linspace(lower_limit, upper_limit, number_levels)
+
+# Return the level hypervector matching a given sample.
+def quantize_sample(sample, quantized_range, level_hypervector_array):
+    return level_hypervector_array[np.digitize(sample, quantized_range, True)]
+
 # Find the class hypervector matching the
 # minimum distance with a query vector.
 def find_class(associative_memory, query_hypervector, dimensionality):
