@@ -78,3 +78,27 @@ def find_class(associative_memory, query_hypervector, dimensionality):
             minimum_distance = delta
 
     return minimum_distance
+
+# Cram the whole dataset into a single array, stripping blanks and
+# commas, and convertig values into floating-point numbers.
+def load_data(file_path):
+    data = []
+    with open(file_path, 'r') as file:
+        for line in file:
+            values = [float(val) for val in line.strip().split(',')]
+            data.append(values)
+    return data
+
+# Load data from a dataset into two separate 'feature' and 'class'
+# vectors (ISOLET only so far).
+# ToDo: Generalize for any dataset in .csv format.
+def load_dataset(dataset_path):
+    data_matrix     = load_data(dataset_path)
+    feature_vector  = []
+    class_vector    = []
+
+    for data_vector in data_matrix:
+        feature_vector.append(data_vector[0:616])
+        class_vector.append(data_vector[617])
+
+    return feature_vector, class_vector
