@@ -94,11 +94,11 @@ def load_data(file_path):
 # ToDo: Generalize for any dataset in .csv format.
 def load_dataset(dataset_path):
     data_matrix     = load_data(dataset_path)
-    feature_vector  = []
+    feature_matrix  = []
     class_vector    = []
 
     for data_vector in data_matrix:
-        feature_vector.append(data_vector[0:616])
+        feature_matrix.append(data_vector[0:616])
         class_vector.append(data_vector[617])
 
-    return feature_vector, class_vector
+    return feature_matrix, class_vector
