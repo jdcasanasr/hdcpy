@@ -1,5 +1,4 @@
 from hdcpy import *
-import copy
 
 #1 Load data from ISOLET dataset.
 training_data_path  = 'data/isolet1+2+3+4.data'
@@ -14,7 +13,7 @@ quantization_lower_limit    = -1
 quantization_upper_limit    = 1
 seed_hypervector            = generate_hypervector(dimensionality)
 
-level_hypervector_array     = generate_level_hypervectors(dimensionality, quantization_levels)
+level_hypervector_array     = generate_level_hypervectors(seed_hypervector, quantization_levels)
 quantized_range             = quantize_range(quantization_lower_limit, quantization_upper_limit, quantization_levels)
 
 associative_memory = []
