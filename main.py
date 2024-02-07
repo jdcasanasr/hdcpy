@@ -7,7 +7,7 @@ testing_data_path   = 'data/isolet5.data'
 feature_matrix, class_vector = load_dataset(training_data_path)
 
 #2 Train the model.
-dimensionality              = 100
+dimensionality              = 10
 quantization_levels         = 10
 quantization_lower_limit    = -1
 quantization_upper_limit    = 1

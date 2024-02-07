@@ -2,30 +2,30 @@ import numpy as np
 
 # Generate "binary", random hypervector.
 # ToDo: Generalize for other VSA's.
-def generate_hypervector(dimensionality):
+def generate_hypervector(dimensionality) -> np.array:
     return np.random.choice([True, False], size = dimensionality, p = [0.5, 0.5])
 
 # Compute Hamming distance between two hypervectors,
 # generated via the 'generate_hypervector' function.
-def hamming_distance(u, v):
-    return np.count_nonzero(np.logical_xor(u, v)) / u.size
+def hamming_distance(u, v) -> np.single:
+    return np.count_nonzero(np.logical_xor(u, v, dtype =np.bool_)) / u.size
 
 # Basic HDC operations.
-def bind(u, v):
-    return np.logical_xor(u, v)
+def bind(u, v) -> np.array:
+    return np.logical_xor(u, v, dtype = np.bool_)
 
-def bundle(u, v):
+def bundle(u, v) -> np.array:
     w = generate_hypervector(u.size)
 
-    return np.logical_or(np.logical_and(w, np.logical_xor(u, v)), np.logical_and(u, v))
+    return np.logical_or(np.logical_and(w, np.logical_xor(u, v, dtype = np.bool_), dtype = np.bool_), np.logical_and(u, v, dtype = np.bool_), dtype = np.bool_)
 
-def permute(u, amount):
-    return np.roll(u, amount)
+def permute(u, amount) -> np.array:
+    return np.roll(u, amount, dtype = np.bool_)
 
 # Negate random positions in a source hypervector. Return a different hypervector.
-def flip(u, number_positions):
-    flip_u = np.array([None] * u.size)
-    flip_positions = np.random.choice(u.size, size = number_positions, replace = False)
+def flip(u, number_positions) -> np.array:
+    flip_u          = np.array([None] * u.size)
+    flip_positions  = np.random.choice(u.size, size = number_positions, replace = False)
 
     for index in range(u.size):
         if (index in flip_positions):
@@ -53,7 +53,7 @@ def quantize_range(lower_limit, upper_limit, number_levels):
     return np.linspace(lower_limit, upper_limit, number_levels)
 
 # Return the level hypervector matching a given sample.
-def quantize_sample(sample, quantized_range, level_hypervector_array):
+def quantize_sample(sample, quantized_range, level_hypervector_array) -> np.array:
     return level_hypervector_array[np.digitize(sample, quantized_range, True)]
 
 # Cram the whole dataset into a single array, stripping blanks and
