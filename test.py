@@ -1,4 +1,5 @@
 from hdcpy import *
+import time
 
 #1 Load data from ISOLET dataset.
 training_data_path  = 'data/isolet1+2+3+4.data'
@@ -20,6 +21,7 @@ feature_vector              = feature_matrix[0]
 class_hypervector           = np.array([None] * dimensionality)
 iteration                   = 0
 
+start = time.process_time()
 for feature in feature_vector:
     position_hypervector    = generate_hypervector(dimensionality)                               # ID hypervector
     level_hypervector       = quantize_sample(feature, quantized_range, level_hypervector_array) # Level
@@ -31,3 +33,5 @@ for feature in feature_vector:
 
     else:
         class_hypervector = bundle(class_hypervector, bind_hypervector)
+
+print(time.process_time() - start)
