@@ -14,10 +14,53 @@ def hamming_distance(u, v) -> np.single:
 def bind(u, v) -> np.array:
     return np.logical_xor(u, v, dtype = np.bool_)
 
-def bundle(u, v) -> np.array:
-    w = generate_hypervector(u.size)
+#def bundle(u, v) -> np.array:
+#    w = generate_hypervector(u.size)
+#
+#    return np.logical_or(np.logical_and(w, np.logical_xor(u, v, dtype = np.bool_), dtype = np.bool_), np.logical_and(u, v, dtype = np.bool_), dtype = np.bool_)
 
-    return np.logical_or(np.logical_and(w, np.logical_xor(u, v, dtype = np.bool_), dtype = np.bool_), np.logical_and(u, v, dtype = np.bool_), dtype = np.bool_)
+def bundle(hypervector_array) -> np.array:
+    bundled_hypervector = np.array([None] * hypervector_array[0].size)
+
+    # Even number of hypervectors case.
+    if hypervector_array.size % 2 == 0:
+        for hypervector_index in range(hypervector_array[0].size):
+            number_of_true      = 0
+            number_of_false     = 0
+
+            for array_index in range(hypervector_array.size):
+                if hypervector_array[array_index][hypervector_index] == True:
+                    number_of_true += 1
+                else:
+                    number_of_false += 1
+
+            if number_of_true > number_of_false:
+                bundled_hypervector[hypervector_index] = True
+
+            elif number_of_true < number_of_false:
+                bundled_hypervector[hypervector_index] = False
+
+            # Break ties by sampling [True, False] at random.
+            else:
+                bundled_hypervector[hypervector_index] = np.random.choice([True, False], p = [0.5, 0.5])
+
+    # Odd number of hypervectors case.
+    else:
+        for hypervector_index in range(hypervector_array[0].size):
+            number_of_true      = 0
+            number_of_false     = 0
+
+            for array_index in range(hypervector_array.size):
+                if hypervector_array[array_index][hypervector_index] == True:
+                    number_of_true += 1
+                else:
+                    number_of_false += 1
+
+            if number_of_true > number_of_false:
+                bundled_hypervector[hypervector_index] = True
+
+            else:
+                bundled_hypervector[hypervector_index] = False
 
 def permute(u, amount) -> np.array:
     return np.roll(u, amount, dtype = np.bool_)
