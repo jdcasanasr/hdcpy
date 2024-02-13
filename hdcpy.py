@@ -37,7 +37,7 @@ def flip(u, number_positions) -> np.array:
     return flip_u
 
 # Generate a set of level hypervectors from a seed hypervector (L1).
-def generate_level_hypervectors(u_seed, number_levels):
+def generate_level_hypervectors(u_seed, number_levels) -> np.array:
     level_hypervectors  = np.array([None] * number_levels)
     number_positions    = int(u_seed.size / number_levels)
 
@@ -47,6 +47,15 @@ def generate_level_hypervectors(u_seed, number_levels):
         level_hypervectors[index] = flip(level_hypervectors[index - 1], number_positions)
 
     return level_hypervectors
+
+# Generate a set of ID (position) hypervectors.
+def generate_id_hypervectors (dimensionality, number_id_hypervectors) -> np.array:
+    id_hypervectors_array = np.array([None] * number_id_hypervectors)
+
+    for index in range(number_id_hypervectors):
+        id_hypervectors_array[index] = generate_hypervector(dimensionality)
+
+    return id_hypervectors_array
 
 # Divide a given [lower_limit, upper_limit] range into even chunks.
 def quantize_range(lower_limit, upper_limit, number_levels):
@@ -80,15 +89,33 @@ def load_dataset(dataset_path):
 
     return feature_matrix, class_vector
 
-## Find the class hypervector matching the
-## minimum distance with a query vector.
-#def find_class(associative_memory, query_hypervector, dimensionality):
-#    minimum_distance = 1.0
-#    
-#    for class_hypervector in associative_memory:
-#        delta = hamming_distance(query_hypervector, class_hypervector, dimensionality)
-#
-#        if (delta < minimum_distance):
-#            minimum_distance = delta
-#
-#    return minimum_distance
+# Embed a feature vector into binary hyperspace.
+# ToDo: Generalize for other VSA's.
+def transform (feature_vector, dimensionality, quantized_range, level_hypervector_array, id_hypervector_array) -> np.array:
+    transformed_hypervector = np.array([None] * dimensionality)
+
+    for feature_index in range(len(feature_vector)):
+
+                feature                 = feature_vector[feature_index]
+                position_hypervector    = id_hypervector_array[feature_index]
+                level_hypervector       = quantize_sample(feature, quantized_range, level_hypervector_array)
+
+                bind_hypervector        = bind(position_hypervector, level_hypervector)
+
+                if (None in transformed_hypervector):
+                    transformed_hypervector = bind_hypervector
+
+                else:
+                    transformed_hypervector = bundle(transformed_hypervector, bind_hypervector)
+
+    return transformed_hypervector
+
+# Find the class hypervector matching the
+# minimum distance with a query vector.
+def classify(associative_memory, query_hypervector):
+    distance_array = np.array([None] * associative_memory.size)
+
+    for index in range(associative_memory.size):
+        distance_array[index] = hamming_distance(associative_memory[index], query_hypervector)
+
+    return (np.argmin(distance_array) + 1, np.min(distance_array))
