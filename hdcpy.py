@@ -2,34 +2,39 @@ import numpy as np
 
 # Generate "binary", random hypervector.
 # ToDo: Generalize for other VSA's.
-def generate_hypervector(dimensionality) -> np.array:
+def generate_hypervector(dimensionality:np.uintc) -> np.array:
     return np.random.choice([True, False], size = dimensionality, p = [0.5, 0.5])
 
 # Compute Hamming distance between two hypervectors,
 # generated via the 'generate_hypervector' function.
-def hamming_distance(u, v) -> np.single:
+def hamming_distance(u:np.array, v:np.array) -> np.single:
     return np.count_nonzero(np.logical_xor(u, v, dtype =np.bool_)) / u.size
 
 # Basic HDC operations.
-def bind(u, v) -> np.array:
+def bind(u:np.array, v:np.array) -> np.array:
     return np.logical_xor(u, v, dtype = np.bool_)
 
-#def bundle(u, v) -> np.array:
-#    w = generate_hypervector(u.size)
-#
-#    return np.logical_or(np.logical_and(w, np.logical_xor(u, v, dtype = np.bool_), dtype = np.bool_), np.logical_and(u, v, dtype = np.bool_), dtype = np.bool_)
+def bundle_1(u, v) -> np.array:
+    w = generate_hypervector(u.size)
 
-def bundle(hypervector_array) -> np.array:
+    return np.logical_or(np.logical_and(w, np.logical_xor(u, v, dtype = np.bool_), dtype = np.bool_), np.logical_and(u, v, dtype = np.bool_), dtype = np.bool_)
+
+def bundle_2(hypervector_array:np.array) -> np.array:
     bundled_hypervector = np.array([None] * hypervector_array[0].size)
 
     # Even number of hypervectors case.
     if hypervector_array.size % 2 == 0:
-        for hypervector_index in range(hypervector_array[0].size):
+        # Append a random hypervector to break any possible ties.
+        new_hypervector_array       = np.array([None] * (hypervector_array.size + 1))
+        new_hypervector_array[:-1]  = hypervector_array
+        new_hypervector_array[-1]   = generate_hypervector(hypervector_array[0].size)
+
+        for hypervector_index in range(new_hypervector_array[0].size):
             number_of_true      = 0
             number_of_false     = 0
 
-            for array_index in range(hypervector_array.size):
-                if hypervector_array[array_index][hypervector_index] == True:
+            for array_index in range(new_hypervector_array.size):
+                if new_hypervector_array[array_index][hypervector_index] == True:
                     number_of_true += 1
                 else:
                     number_of_false += 1
@@ -37,12 +42,8 @@ def bundle(hypervector_array) -> np.array:
             if number_of_true > number_of_false:
                 bundled_hypervector[hypervector_index] = True
 
-            elif number_of_true < number_of_false:
-                bundled_hypervector[hypervector_index] = False
-
-            # Break ties by sampling [True, False] at random.
             else:
-                bundled_hypervector[hypervector_index] = np.random.choice([True, False], p = [0.5, 0.5])
+                bundled_hypervector[hypervector_index] = False
 
     # Odd number of hypervectors case.
     else:
@@ -61,6 +62,9 @@ def bundle(hypervector_array) -> np.array:
 
             else:
                 bundled_hypervector[hypervector_index] = False
+
+    return bundled_hypervector
+
 
 def permute(u, amount) -> np.array:
     return np.roll(u, amount, dtype = np.bool_)
@@ -136,20 +140,15 @@ def load_dataset(dataset_path):
 # ToDo: Generalize for other VSA's.
 def transform (feature_vector, dimensionality, quantized_range, level_hypervector_array, id_hypervector_array) -> np.array:
     transformed_hypervector = np.array([None] * dimensionality)
+    bind_hypervector_array = np.array([None] * len(feature_vector))
 
     for feature_index in range(len(feature_vector)):
+        feature                                 = feature_vector[feature_index]
+        position_hypervector                    = id_hypervector_array[feature_index]
+        level_hypervector                       = quantize_sample(feature, quantized_range, level_hypervector_array)
+        bind_hypervector_array[feature_index]   = bind(position_hypervector, level_hypervector)
 
-                feature                 = feature_vector[feature_index]
-                position_hypervector    = id_hypervector_array[feature_index]
-                level_hypervector       = quantize_sample(feature, quantized_range, level_hypervector_array)
-
-                bind_hypervector        = bind(position_hypervector, level_hypervector)
-
-                if (None in transformed_hypervector):
-                    transformed_hypervector = bind_hypervector
-
-                else:
-                    transformed_hypervector = bundle(transformed_hypervector, bind_hypervector)
+    transformed_hypervector = bundle_2(bind_hypervector_array)
 
     return transformed_hypervector
 

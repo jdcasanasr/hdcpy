@@ -44,7 +44,7 @@ a_instances                 = 0
 
 # Find all instances of letter a' in feature_matrix, and test classification.
 for index in range(len(class_vector)):
-    if alphabet[int(class_vector[index])] == 'c':
+    if alphabet[int(class_vector[index])] == 'a':
         a_instances += 1
         successes = 0
 
@@ -54,8 +54,8 @@ for index in range(len(class_vector)):
         # Classify the unknown hypervector.
         predicted_class, minimum_distance = classify(associative_memory, query_hypervector)
 
-        if (alphabet[predicted_class] == 'c'):
+        if (alphabet[predicted_class] == 'a'):
             successes += 1
 
-print("Instances of letter 'c': %d." % a_instances)
+print("Instances of letter 'a': %d." % a_instances)
 print("Correct predictions: %d." % successes)

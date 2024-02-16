@@ -61,6 +61,7 @@ associative_memory          = np.array([None] * number_of_classes)
 for class_index in range(number_of_classes):
 
     number_of_instances = 0
+    bind_hypervector_array = np.array([None] * len(feature_matrix[0]))
 
     for index in range(len(class_vector)):
         if alphabet[int(class_vector[index])] == alphabet[class_index + 1]:
@@ -73,19 +74,13 @@ for class_index in range(number_of_classes):
 
             for feature_index in range(len(feature_vector)):
 
-                feature                 = feature_vector[feature_index]
-                position_hypervector    = id_hypervector_array[feature_index]
-                level_hypervector       = quantize_sample(feature, quantized_range, level_hypervector_array)
+                feature                                 = feature_vector[feature_index]
+                position_hypervector                    = id_hypervector_array[feature_index]
+                level_hypervector                       = quantize_sample(feature, quantized_range, level_hypervector_array)
 
-                bind_hypervector        = bind(position_hypervector, level_hypervector)
+                bind_hypervector_array[feature_index]   = bind(position_hypervector, level_hypervector)
 
-                if (None in class_hypervector):
-                    class_hypervector = bind_hypervector
-
-                else:
-                    class_hypervector = bundle(class_hypervector, bind_hypervector)
-
-    associative_memory[class_index] = class_hypervector
+    associative_memory[class_index] = bundle_2(bind_hypervector_array)
 
 # Save vector to a file.
 np.save("associative_memory", associative_memory)
