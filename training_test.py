@@ -33,17 +33,19 @@ alphabet = {
 }
 
 #1 Load data from ISOLET dataset.
-training_data_path  = 'data/isolet1+2+3+4.data'
-feature_matrix, class_vector = load_dataset(training_data_path)
+training_data_path              = 'data/isolet1+2+3+4.data'
+feature_matrix, class_vector    = load_dataset(training_data_path)
 
 #2 Train the model.
 dimensionality              = 10000
-quantization_levels         = 10
+quantization_levels         = 100
 quantization_lower_limit    = -1
 quantization_upper_limit    = 1
 seed_hypervector            = generate_hypervector(dimensionality)
 number_of_features          = len(feature_matrix[0])
 number_of_classes           = int(np.max(class_vector))
+number_of_instances         = 0
+number_of_features          = len(feature_matrix[0])
 
 level_hypervector_array     = generate_level_hypervectors(seed_hypervector, quantization_levels)
 id_hypervector_array        = generate_id_hypervectors(dimensionality, number_of_features)
@@ -55,32 +57,28 @@ np.save("id_hypervector_array", id_hypervector_array)
 np.save("quantized_range", quantized_range)
 
 class_hypervector           = np.array([None] * dimensionality)
-associative_memory          = np.array([None] * number_of_classes)
+associative_memory          = np.array([None] * dimensionality)
+bind_hypermatrix            = np.empty((number_of_features, dimensionality), np.bool_)
 
 # Traverse the entire class_vector array in search for letters.
-for class_index in range(number_of_classes):
+for index in range(len(class_vector)):
+    if alphabet[int(class_vector[index])] == 'a':
+        # Auxiliary code to check the program hasn't hung.
+        number_of_instances += 1
+        print(f'Found {number_of_instances} instances of letter a', end = '\r')
 
-    number_of_instances = 0
-    bind_hypervector_array = np.array([None] * len(feature_matrix[0]))
+        # Generate the class hypervector for the letter 'a'.
+        feature_vector = feature_matrix[index]
 
-    for index in range(len(class_vector)):
-        if alphabet[int(class_vector[index])] == alphabet[class_index + 1]:
-            # Auxiliary code to check the program hasn't hung.
-            number_of_instances += 1
-            print("Found %d instances of letter %s." %(number_of_instances, alphabet[class_index + 1]), end = '\r')
+        for feature_index in range(len(feature_vector)):
 
-            # Generate the class hypervector for the letter 'a'.
-            feature_vector = feature_matrix[index]
+            feature                                 = feature_vector[feature_index]
+            position_hypervector                    = id_hypervector_array[feature_index]
+            level_hypervector                       = quantize_sample(feature, quantized_range, level_hypervector_array)
 
-            for feature_index in range(len(feature_vector)):
+            bind_hypermatrix[feature_index]         = bind(position_hypervector, level_hypervector)
 
-                feature                                 = feature_vector[feature_index]
-                position_hypervector                    = id_hypervector_array[feature_index]
-                level_hypervector                       = quantize_sample(feature, quantized_range, level_hypervector_array)
-
-                bind_hypervector_array[feature_index]   = bind(position_hypervector, level_hypervector)
-
-    associative_memory[class_index] = bundle_2(bind_hypervector_array)
+associative_memory = multibundle(bind_hypermatrix)
 
 # Save vector to a file.
 np.save("associative_memory", associative_memory)

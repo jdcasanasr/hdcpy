@@ -1,7 +1,7 @@
 from hdcpy import *
 from torchhd import *
 
-number_of_hypervectors  = 20
+number_of_hypervectors  = 2
 number_of_dimensions    = 10000
 vsa                     = 'BSC'
 
@@ -22,7 +22,8 @@ torchhd_bundle_hypervector  = multibundle(torchhd_uv_tensor)
 #torchhd_v_delta = (number_of_dimensions - int(hamming_similarity(torchhd_uv_tensor[1], torchhd_bundle_hypervector).item())) / number_of_dimensions
 
 for index in range(number_of_hypervectors):
-    delta_array.append((number_of_dimensions - int(hamming_similarity(torchhd_uv_tensor[index], torchhd_bundle_hypervector).item())) / number_of_dimensions)
+    #delta_array.append((number_of_dimensions - int(hamming_similarity(torchhd_uv_tensor[index], torchhd_bundle_hypervector).item())) / number_of_dimensions)
+    delta_array.append(int(hamming_similarity(torchhd_uv_tensor[index], torchhd_bundle_hypervector).item()))
 
 for index in range(number_of_hypervectors):
-    print(f'Hamming(hypervector, bundle) = {delta_array[index]:0.4f}')
+    print(f'Hamming(hypervector, bundle) = {delta_array[index]}')

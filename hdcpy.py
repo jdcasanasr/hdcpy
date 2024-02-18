@@ -2,8 +2,8 @@ import numpy as np
 
 # Generate "binary", random hypervector.
 # ToDo: Generalize for other VSA's.
-def generate_hypervector(dimensionality:np.uintc) -> np.array:
-    return np.random.choice([True, False], size = dimensionality, p = [0.5, 0.5])
+def generate_hypervector(number_of_dimensions:np.uintc) -> np.array:
+    return np.random.choice([True, False], size = number_of_dimensions, p = [0.5, 0.5])
 
 # Compute Hamming distance between two hypervectors,
 # generated via the 'generate_hypervector' function.
@@ -14,56 +14,61 @@ def hamming_distance(u:np.array, v:np.array) -> np.single:
 def bind(u:np.array, v:np.array) -> np.array:
     return np.logical_xor(u, v, dtype = np.bool_)
 
-def bundle_1(u, v) -> np.array:
+def bundle(u:np.array, v:np.array) -> np.array:
     w = generate_hypervector(u.size)
 
     return np.logical_or(np.logical_and(w, np.logical_xor(u, v, dtype = np.bool_), dtype = np.bool_), np.logical_and(u, v, dtype = np.bool_), dtype = np.bool_)
 
-def bundle_2(hypervector_array:np.array) -> np.array:
-    bundled_hypervector = np.array([None] * hypervector_array[0].size)
+def multibundle(hypermatrix:np.array) -> np.array:
+    number_of_rows, number_of_columns   = np.shape(hypermatrix)
+    bundle_hypervector                  = np.array([None] * number_of_columns)
 
     # Even number of hypervectors case.
-    if hypervector_array.size % 2 == 0:
+    if number_of_rows % 2 == 0:
         # Append a random hypervector to break any possible ties.
-        new_hypervector_array       = np.array([None] * (hypervector_array.size + 1))
-        new_hypervector_array[:-1]  = hypervector_array
-        new_hypervector_array[-1]   = generate_hypervector(hypervector_array[0].size)
+        new_hypermatrix         = np.empty((number_of_rows + 1, number_of_columns), np.bool_)
+        new_hypermatrix[:-1]    = hypermatrix
+        new_hypermatrix[-1]     = generate_hypervector(number_of_columns)
 
-        for hypervector_index in range(new_hypervector_array[0].size):
+        #new_hypervector_array       = np.array([None] * (hypervector_array.size + 1))
+        #new_hypervector_array[:-1]  = hypervector_array
+        #new_hypervector_array[-1]   = generate_hypervector(hypervector_array[0].size)
+
+        for column_index in range(number_of_columns):
             number_of_true      = 0
             number_of_false     = 0
 
-            for array_index in range(new_hypervector_array.size):
-                if new_hypervector_array[array_index][hypervector_index] == True:
+            for row_index in range(number_of_rows + 1):
+                if new_hypermatrix[row_index][column_index] == True:
                     number_of_true += 1
                 else:
                     number_of_false += 1
 
             if number_of_true > number_of_false:
-                bundled_hypervector[hypervector_index] = True
+                bundle_hypervector[column_index] = True
 
             else:
-                bundled_hypervector[hypervector_index] = False
+                bundle_hypervector[column_index] = False
 
     # Odd number of hypervectors case.
     else:
-        for hypervector_index in range(hypervector_array[0].size):
+        for column_index in range(number_of_columns):
             number_of_true      = 0
             number_of_false     = 0
 
-            for array_index in range(hypervector_array.size):
-                if hypervector_array[array_index][hypervector_index] == True:
+            for row_index in range(number_of_rows):
+                if hypermatrix[row_index][column_index] == True:
                     number_of_true += 1
                 else:
                     number_of_false += 1
 
             if number_of_true > number_of_false:
-                bundled_hypervector[hypervector_index] = True
+                bundle_hypervector[column_index] = True
 
             else:
-                bundled_hypervector[hypervector_index] = False
+                bundle_hypervector[column_index] = False
 
-    return bundled_hypervector
+    return bundle_hypervector
 
 
 def permute(u, amount) -> np.array:
