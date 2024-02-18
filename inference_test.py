@@ -36,26 +36,27 @@ feature_matrix, class_vector    = load_dataset(testing_data_path)
 
 # Model requirements.
 dimensionality              = 10000
-level_hypervector_array     = np.load('level_hypervector_array.npy', allow_pickle = True)
-id_hypervector_array        = np.load('id_hypervector_array.npy', allow_pickle = True)
+level_hypermatrix           = np.load('level_hypermatrix.npy', allow_pickle = True)
+position_hypermatrix        = np.load('position_hypermatrix.npy', allow_pickle = True)
 associative_memory          = np.load('associative_memory.npy', allow_pickle = True)
-quantized_range             = np.load('quantized_range.npy', allow_pickle = True)
+quantization_range          = np.load('quantization_range.npy', allow_pickle = True)
 a_instances                 = 0
+successes                   = 0
+test_class                  = 2
 
 # Find all instances of letter a' in feature_matrix, and test classification.
-for index in range(len(class_vector)):
-    if alphabet[int(class_vector[index])] == 'a':
+for class_index in range(len(class_vector)):
+    if alphabet[int(class_vector[class_index])] == alphabet[test_class]:
+        feature_vector = feature_matrix[class_index]
         a_instances += 1
-        successes = 0
+        print(f'Found {a_instances} instances of class {alphabet[test_class]}', end = '\r')
 
         # We all know it belongs to class 'a'!.
-        query_hypervector = transform(feature_matrix[index], dimensionality, quantized_range, level_hypervector_array, id_hypervector_array)
+        query_hypervector = encode(feature_vector, quantization_range, level_hypermatrix, position_hypermatrix)
 
         # Classify the unknown hypervector.
-        predicted_class, minimum_distance = classify(associative_memory, query_hypervector)
-
-        if (alphabet[predicted_class] == 'a'):
+        predicted_class, maximum_similarity = classify(associative_memory, query_hypervector)
+        if (alphabet[predicted_class] == 'b'):
             successes += 1
 
-print("Instances of letter 'a': %d." % a_instances)
-print("Correct predictions: %d." % successes)
+print(f'Instances: {a_instances} | Correct Predictions: {successes} | Accuracy: {(successes / a_instances) * 100}%')
