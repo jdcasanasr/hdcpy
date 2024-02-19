@@ -4,9 +4,11 @@ import numpy as np
 def random_hypervector(number_of_dimensions:np.uint) -> np.array:
     return np.random.choice([True, False], size = number_of_dimensions, p = [0.5, 0.5])
 
-# ToDo: Add check for different dimensionalities.
-def hamming_similarity(hypervector_u:np.array, hypervector_v:np.array) -> np.double:
-    return hypervector_u.size - np.count_nonzero(np.logical_xor(hypervector_u, hypervector_v, dtype = np.bool_))
+# ToDo: Add check for different distances.
+def hamming_distance(hypervector_u:np.array, hypervector_v:np.array) -> np.double:
+    number_of_dimensions = hypervector_u.size
+
+    return np.count_nonzero(np.logical_xor(hypervector_u, hypervector_v, dtype = np.bool_)) / number_of_dimensions
 
 def bind(hypervector_u:np.array, hypervector_v:np.array) -> np.array:
     return np.logical_xor(hypervector_u, hypervector_v, dtype = np.bool_)
@@ -22,13 +24,13 @@ def bundle(hypervector_u:np.array, hypervector_v:np.array) -> np.array:
 def multibundle(hypermatrix:np.array) -> np.array:
     number_of_rows, number_of_columns   = np.shape(hypermatrix)
     number_of_dimensions                = number_of_columns
-    bundle_hypervector                  = np.array([None] * number_of_columns)
-
+    bundle_hypervector                  = np.empty(number_of_dimensions, np.bool_)
 
     # Even number of hypervectors case.
     if number_of_rows % 2 == 0:
         # Append a random hypervector to break any possible ties.
         new_hypermatrix         = np.empty((number_of_rows + 1, number_of_columns), np.bool_)
+        # Check this part!
         new_hypermatrix[:-1]    = hypermatrix
         new_hypermatrix[-1]     = random_hypervector(number_of_dimensions)
         
@@ -83,11 +85,10 @@ def flip(hypervector_u:np.array, number_of_positions:np.uint) -> np.array:
 
     return flip_hypervector
 
-# Generate a set of level hypervectors from a seed hypervector (L1).
-def get_level_hypermatrix(number_of_dimensions:np.uint, number_of_levels:np.uint) -> np.array:
+def get_level_hypermatrix(number_of_levels:np.uint, number_of_dimensions:np.uint) -> np.array:
     number_of_rows              = number_of_levels
     number_of_columns           = number_of_dimensions
-    number_of_flip_positions    = int(number_of_dimensions / number_of_levels)
+    number_of_flip_positions    = int(np.ceil((number_of_dimensions / (number_of_levels - 1))))
     level_hypermatrix           = np.empty((number_of_rows, number_of_columns), np.bool_)
     
     level_hypermatrix[0]        = random_hypervector(number_of_dimensions)
@@ -97,8 +98,7 @@ def get_level_hypermatrix(number_of_dimensions:np.uint, number_of_levels:np.uint
 
     return level_hypermatrix
 
-# Generate a set position (ID) hypervectors.
-def get_position_hypermatrix(number_of_dimensions:np.uint, number_of_positions:np.uint) -> np.array:
+def get_position_hypermatrix(number_of_positions:np.uint, number_of_dimensions:np.uint) -> np.array:
     number_of_rows          = number_of_positions
     number_of_columns       = number_of_dimensions
     
@@ -111,10 +111,6 @@ def get_position_hypermatrix(number_of_dimensions:np.uint, number_of_positions:n
 
 def get_quantization_range(lower_limit:np.double, upper_limit:np.double, number_of_levels:np.uint) -> np.array:
     return np.linspace(lower_limit, upper_limit, number_of_levels)
-
-# Return the level hypervector matching a given sample.
-def quantize_feature(feature:np.double, quantization_range:np.array, level_hypermatrix:np.array) -> np.array:
-    return level_hypermatrix[np.digitize(feature, quantization_range, True)]
 
 # Cram the whole dataset into a single array, stripping blanks and
 # commas, and convertig values into floating-point numbers.
@@ -138,22 +134,25 @@ def load_dataset(dataset_path):
 
     return feature_matrix, class_vector
 
-# ToDo: Add check for different number of positions
+# Return the level hypervector matching a given sample.
+def get_level_hypervector(feature:np.double, quantization_range:np.array, level_hypermatrix:np.array) -> np.array:
+    index = np.digitize(feature, quantization_range, True)
+    return level_hypermatrix[index]
+
 def encode(feature_vector:np.array, quantization_range:np.array, level_hypermatrix:np.array, position_hypermatrix:np.array) -> np.array:
     number_of_rows, number_of_columns   = np.shape(position_hypermatrix)
+    # ToDo: Add a check for number_of_features != number_of_rows
     number_of_features                  = number_of_rows
+    # Hypermatrix for 'level_hypervector BIND position_hypervector'
     bind_hypermatrix                    = np.empty((number_of_rows, number_of_columns), np.bool_)
-    encode_hypervector                  = np.empty(number_of_columns, np.bool_)
 
     for feature_index in range(number_of_features):
         feature                             = feature_vector[feature_index]
         position_hypervector                = position_hypermatrix[feature_index]
-        level_hypervector                   = quantize_feature(feature, quantization_range, level_hypermatrix)
+        level_hypervector                   = get_level_hypervector(feature, quantization_range, level_hypermatrix)
         bind_hypermatrix[feature_index]     = bind(position_hypervector, level_hypervector)
 
-    encode_hypervector = multibundle(bind_hypermatrix)
-
-    return encode_hypervector
+    return multibundle(bind_hypermatrix)
 
 # Find the class hypervector matching the
 # minimum distance with a query vector.
