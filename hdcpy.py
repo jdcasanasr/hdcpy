@@ -20,53 +20,17 @@ def bundle(hypervector_u:np.array, hypervector_v:np.array) -> np.array:
 
     return np.logical_or(np.logical_and(hypervector_w, np.logical_xor(hypervector_u, hypervector_v, dtype = np.bool_), dtype = np.bool_), np.logical_and(hypervector_u, hypervector_v, dtype = np.bool_), dtype = np.bool_)
 
-# ToDo: Add check for different dimensionalities.
-def multibundle(hypermatrix:np.array) -> np.array:
+# Alternative version.
+def multibundle(hypermatrix: np.array) -> np.array:
     number_of_rows, number_of_columns   = np.shape(hypermatrix)
     number_of_dimensions                = number_of_columns
-    bundle_hypervector                  = np.empty(number_of_dimensions, np.bool_)
+    tie_breaking_hypervector             = random_hypervector(number_of_dimensions)
 
-    # Even number of hypervectors case.
-    if number_of_rows % 2 == 0:
-        # Append a random hypervector to break any possible ties.
-        new_hypermatrix         = np.empty((number_of_rows + 1, number_of_columns), np.bool_)
-        # Check this part!
-        new_hypermatrix[:-1]    = hypermatrix
-        new_hypermatrix[-1]     = random_hypervector(number_of_dimensions)
-        
-        for column_index in range(number_of_columns):
-            number_of_true      = 0
-            number_of_false     = 0
+    number_of_true  = np.sum(hypermatrix, axis = 0)
+    number_of_false = np.subtract(number_of_rows, number_of_true)
 
-            for row_index in range(number_of_rows + 1):
-                if new_hypermatrix[row_index][column_index] == True:
-                    number_of_true += 1
-                else:
-                    number_of_false += 1
-
-            if number_of_true > number_of_false:
-                bundle_hypervector[column_index] = True
-
-            else:
-                bundle_hypervector[column_index] = False
-
-    # Odd number of hypervectors case.
-    else:
-        for column_index in range(number_of_columns):
-            number_of_true      = 0
-            number_of_false     = 0
-
-            for row_index in range(number_of_rows):
-                if hypermatrix[row_index][column_index] == True:
-                    number_of_true += 1
-                else:
-                    number_of_false += 1
-
-            if number_of_true > number_of_false:
-                bundle_hypervector[column_index] = True
-
-            else:
-                bundle_hypervector[column_index] = False
+    bundle_hypervector = bundle_hypervector = np.where(number_of_true > number_of_false, True,
+                                   np.where(number_of_true < number_of_false, False, tie_breaking_hypervector))
 
     return bundle_hypervector
 
@@ -88,7 +52,7 @@ def flip(hypervector_u:np.array, number_of_positions:np.uint) -> np.array:
 def get_level_hypermatrix(number_of_levels:np.uint, number_of_dimensions:np.uint) -> np.array:
     number_of_rows              = number_of_levels
     number_of_columns           = number_of_dimensions
-    number_of_flip_positions    = int(np.ceil((number_of_dimensions / (number_of_levels - 1))))
+    number_of_flip_positions    = int(np.ceil((number_of_dimensions / (2 * number_of_levels))))
     level_hypermatrix           = np.empty((number_of_rows, number_of_columns), np.bool_)
     
     level_hypermatrix[0]        = random_hypervector(number_of_dimensions)
@@ -158,10 +122,10 @@ def encode(feature_vector:np.array, quantization_range:np.array, level_hypermatr
 # minimum distance with a query vector.
 def classify(associative_memory:np.array, query_hypervector:np.array):
     number_of_classes = np.shape(associative_memory)[0]
-    similarity_vector = np.empty(number_of_classes, np.uint)
+    similarity_vector = np.empty(number_of_classes, np.double)
 
     for class_index in range(number_of_classes):
-        similarity_vector[class_index] = hamming_similarity(associative_memory[class_index], query_hypervector)
+        similarity_vector[class_index] = hamming_distance(associative_memory[class_index], query_hypervector)
 
     # (class, similarity)
-    return (np.argmax(similarity_vector) + 1, np.max(similarity_vector))
+    return np.argmin(similarity_vector) + 1

@@ -30,33 +30,33 @@ alphabet = {
     26  : 'z'
 }
 
-# Goal: To find all vectors for letter 'a' and see if the model works.
-testing_data_path               = 'data/isolet5.data'
+testing_data_path               = 'data/ISOLET/isolet5.data'
 feature_matrix, class_vector    = load_dataset(testing_data_path)
 
-# Model requirements.
-dimensionality              = 10000
-level_hypermatrix           = np.load('level_hypermatrix.npy', allow_pickle = True)
-position_hypermatrix        = np.load('position_hypermatrix.npy', allow_pickle = True)
-associative_memory          = np.load('associative_memory.npy', allow_pickle = True)
-quantization_range          = np.load('quantization_range.npy', allow_pickle = True)
-a_instances                 = 0
-successes                   = 0
-test_class                  = 2
+level_hypermatrix               = np.load('level_hypermatrix.npy', allow_pickle = True)
+position_hypermatrix            = np.load('position_hypermatrix.npy', allow_pickle = True)
+associative_memory              = np.load('associative_memory.npy', allow_pickle = True)
+quantization_range              = np.load('quantization_range.npy', allow_pickle = True)
+
+number_of_data_elements         = len(class_vector)
+number_of_classes               = 26
+number_of_correct_predictions   = 0
+number_of_class_instances       = 0
 
 # Find all instances of letter a' in feature_matrix, and test classification.
-for class_index in range(len(class_vector)):
-    if alphabet[int(class_vector[class_index])] == alphabet[test_class]:
-        feature_vector = feature_matrix[class_index]
-        a_instances += 1
-        print(f'Found {a_instances} instances of class {alphabet[test_class]}', end = '\r')
+for test_class in range(1, number_of_classes + 1):
+    for class_index in range(len(class_vector)):
+        if alphabet[int(class_vector[class_index])] == alphabet[test_class]:
+            feature_vector = feature_matrix[class_index]
+            number_of_class_instances += 1
+            print(f'Instances: {number_of_class_instances} of {number_of_data_elements} | Correct Predictions: {number_of_correct_predictions} | Accuracy: {((number_of_correct_predictions / number_of_data_elements) * 100):0.2f}%', end = '\r')
 
-        # We all know it belongs to class 'a'!.
-        query_hypervector = encode(feature_vector, quantization_range, level_hypermatrix, position_hypermatrix)
+            # We all know it belongs to class 'a'!.
+            query_hypervector = encode(feature_vector, quantization_range, level_hypermatrix, position_hypermatrix)
 
-        # Classify the unknown hypervector.
-        predicted_class, maximum_similarity = classify(associative_memory, query_hypervector)
-        if (alphabet[predicted_class] == 'b'):
-            successes += 1
+            # Classify the unknown hypervector.
+            predicted_class = classify(associative_memory, query_hypervector)
+            if (alphabet[predicted_class] == alphabet[test_class]):
+                number_of_correct_predictions += 1
 
-print(f'Instances: {a_instances} | Correct Predictions: {successes} | Accuracy: {(successes / a_instances) * 100}%')
+print(f'Instances: {number_of_class_instances} of {number_of_data_elements} | Correct Predictions: {number_of_correct_predictions} | Accuracy: {((number_of_correct_predictions / number_of_data_elements) * 100):0.2f}%')
