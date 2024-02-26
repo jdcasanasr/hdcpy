@@ -40,7 +40,7 @@ number_of_instances_per_class   = 240
 number_of_features              = 616
 
 # Training parameters.
-number_of_dimensions            = 9000
+number_of_dimensions            = 10000
 number_of_levels                = 10
 level_lower_limit               = -1.0
 level_upper_limit               = 1.0

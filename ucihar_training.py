@@ -11,8 +11,8 @@ def load_class_data(file_path):
         data = [line.strip().split()[0] for line in f]
     return np.array(data, dtype = np.uint)
 
-training_feature_data   = load_feature_data('data/UCIHAR/X_train.txt')
-training_class_data     = load_class_data('data/UCIHAR/y_train.txt')
+training_feature_data   = load_feature_data('/home/jdcasanasr/Development/hdcpy/data/UCIHAR/X_train.txt')
+training_class_data     = load_class_data('/home/jdcasanasr/Development/hdcpy/data/UCIHAR/y_train.txt')
 
 # Dataset characteristics.
 number_of_classes                   = 6
