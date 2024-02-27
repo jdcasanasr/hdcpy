@@ -1,0 +1,14 @@
+# **************************************************
+# Quartus Prime Version 23.4.0
+# Process ID 207349
+# Start logging TCL commands
+# mar feb. 27 11:13:21 2024
+# **************************************************
+project_open "/home/jdcasanasr/Development/clic/quartus/clic.qpf"
+flng::run_flow_command -flow "dni_compile" -start "dni_analysis_and_synthesis" -end "dni_analysis_and_synthesis"
+flng::run_flow_command -flow "dni_compile" -start "dni_analysis_and_synthesis" -end "dni_analysis_and_synthesis"
+project_close
+# **************************************************
+# mar feb. 27 11:43:25 2024
+# End of logging TCL commands
+# **************************************************
