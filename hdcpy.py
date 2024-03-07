@@ -52,7 +52,7 @@ def flip(hypervector_u:np.array, number_of_positions:np.uint) -> np.array:
 def get_level_hypermatrix(number_of_levels:np.uint, number_of_dimensions:np.uint) -> np.array:
     number_of_rows              = number_of_levels
     number_of_columns           = number_of_dimensions
-    number_of_flip_positions    = int(np.ceil((number_of_dimensions / (2 * number_of_levels))))
+    number_of_flip_positions    = int(np.ceil((number_of_dimensions / (number_of_levels - 1))))
     level_hypermatrix           = np.empty((number_of_rows, number_of_columns), np.bool_)
     
     level_hypermatrix[0]        = random_hypervector(number_of_dimensions)

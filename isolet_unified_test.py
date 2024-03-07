@@ -65,7 +65,7 @@ for class_key in range(1, number_of_classes + 1): # Range = [1, 26]
         if (alphabet[class_key] == alphabet[int(training_class_data[class_vector_index])]) and (prototype_index < number_of_instances_per_class):
             prototype_hypermatrix[prototype_index] = encode(training_feature_data[class_vector_index], quantization_range, level_hypermatrix, position_hypermatrix)
             prototype_index += 1 # Range = [0, 239]
-            print(f'Training for class {alphabet[class_key]} | Found {prototype_index} of 240 Instances.', end = '\r')
+            #print(f'Training for class {alphabet[class_key]} | Found {prototype_index} of 240 Instances.', end = '\r')
 
     # Build the class hypervector.
     associative_memory[class_key - 1] = multibundle(prototype_hypermatrix) # Range = [0, 25]
@@ -81,7 +81,7 @@ for test_class in range(1, number_of_classes + 1):
         if alphabet[int(testing_class_data[class_index])] == alphabet[test_class]:
             feature_vector = testing_feature_data[class_index]
             number_of_class_instances += 1
-            print(f'Instances: {number_of_class_instances} of {number_of_data_elements} | Correct Predictions: {number_of_correct_predictions} | Accuracy: {((number_of_correct_predictions / number_of_data_elements) * 100):0.2f}%', end = '\r')
+            #print(f'Instances: {number_of_class_instances} of {number_of_data_elements} | Correct Predictions: {number_of_correct_predictions} | Accuracy: {((number_of_correct_predictions / number_of_data_elements) * 100):0.2f}%', end = '\r')
 
             # We all know it belongs to class 'a'!.
             query_hypervector = encode(feature_vector, quantization_range, level_hypermatrix, position_hypermatrix)
@@ -91,4 +91,5 @@ for test_class in range(1, number_of_classes + 1):
             if (alphabet[predicted_class] == alphabet[test_class]):
                 number_of_correct_predictions += 1
 
-print(f'Instances: {number_of_class_instances} of {number_of_data_elements} | Correct Predictions: {number_of_correct_predictions} | Accuracy: {((number_of_correct_predictions / number_of_data_elements) * 100):0.2f}%')
+#print(f'Instances: {number_of_class_instances} of {number_of_data_elements} | Correct Predictions: {number_of_correct_predictions} | Accuracy: {((number_of_correct_predictions / number_of_data_elements) * 100):0.2f}%')
+print(f'{(number_of_correct_predictions / number_of_data_elements) * 100:0.2f}')
