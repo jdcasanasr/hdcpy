@@ -20,7 +20,7 @@ testing_class_data      = load_class_data('/home/jdcasanasr/Development/hdcpy/da
 
 # Dataset characteristics.
 number_of_classes                   = 6
-number_of_features_per_instance     = 516
+number_of_features_per_instance     = 561
 number_of_total_instances           = 7352
 number_of_instances_per_class       = 1407 # Some data is missing.
 
@@ -57,7 +57,7 @@ for class_label in range(1, number_of_classes + 1): # Range = [1, 6]
 
             number_of_class_instances += 1
 
-            print(f'Training For Class {class_label} | Found {number_of_class_instances} Instances So Far', end = '\r')
+            #print(f'Training For Class {class_label} | Found {number_of_class_instances} Instances So Far', end = '\r')
 
     # Build the class hypervector.
     associative_memory[class_label - 1] = multibundle(prototype_hypermatrix[1:][:]) # Range = [0, 25]
@@ -74,6 +74,7 @@ for index in range(number_of_data_elements):
     if predicted_class == actual_class:
         number_of_correct_predictions += 1
 
-    print(f'Instances: {number_of_class_instances} of {number_of_data_elements} | Correct Predictions: {number_of_correct_predictions} | Accuracy: {((number_of_correct_predictions / number_of_data_elements) * 100):0.2f}%', end = '\r')
+    #print(f'Instances: {number_of_class_instances} of {number_of_data_elements} | Correct Predictions: {number_of_correct_predictions} | Accuracy: {((number_of_correct_predictions / number_of_data_elements) * 100):0.2f}%', end = '\r')
 
-print(f'Instances: {number_of_class_instances} of {number_of_data_elements} | Correct Predictions: {number_of_correct_predictions} | Accuracy: {((number_of_correct_predictions / number_of_data_elements) * 100):0.2f}%')
+#print(f'Instances: {number_of_class_instances} of {number_of_data_elements} | Correct Predictions: {number_of_correct_predictions} | Accuracy: {((number_of_correct_predictions / number_of_data_elements) * 100):0.2f}%')
+print(f'{(number_of_correct_predictions / number_of_data_elements) * 100:0.2f}')

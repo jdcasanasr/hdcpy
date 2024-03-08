@@ -8,7 +8,7 @@ do
         do
             rm -rf __pycache__
             accuracy=$(python3 isolet_unified_test.py "$j" "$i")
-            echo "$1, $2, $accuracy" >> isolet.log
+            echo "$j, $i, $accuracy" >> isolet.log
         done
     done
 done
