@@ -4,7 +4,7 @@ import numpy as np
 
 from hdcpy import *
 
-log_path            = '/home/jdcasanasr/Development/hdcpy/logs/isolet.log'
+log_path            = '/home/jdcasanasr/Development/hdcpy/logs/ucihar.log'
 dataframe           = pd.read_csv(log_path, header = None)
 number_of_tests     = 3
 
@@ -34,13 +34,9 @@ while i < len(quantization_levels):
     effective_quantization_levels.append(quantization_levels[i])
     i += 3
 
-indeces = []
+a = np.array(effective_accuracies)
+d = np.array(effective_dimensions)
+q = np.array(effective_quantization_levels)
 
-for i in range(len(effective_quantization_levels)):
-    if effective_quantization_levels[i] == 20:
-        indeces.append(i)
-
-plt.plot(effective_dimensions[indeces.], effective_accuracies[indeces])
-plt.show
-
-pass
+df = pd.DataFrame({"Dimensions" : d, "Quantization Levels" : q, "Accuracy" : a})
+df.to_csv("ucihar.csv", index = False)
