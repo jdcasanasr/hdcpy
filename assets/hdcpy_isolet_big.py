@@ -4,13 +4,13 @@ import numpy as np
 
 from hdcpy import *
 
-log_path            = '/home/jdcasanasr/Development/hdcpy/logs/ucihar.log'
+log_path            = '/home/jdcasanasr/Development/hdcpy/logs/isolet_small.csv'
 dataframe           = pd.read_csv(log_path, header = None)
 number_of_tests     = 3
 
 dimensions          = dataframe.iloc[:, 0].values
 quantization_levels = dataframe.iloc[:, 1].values
-accuracy            = dataframe.iloc[:, 2].values
+accuracy            = dataframe.iloc[:, -1].values
 
 effective_accuracies            = []
 effective_dimensions            = []
@@ -39,4 +39,4 @@ d = np.array(effective_dimensions)
 q = np.array(effective_quantization_levels)
 
 df = pd.DataFrame({"Dimensions" : d, "Quantization Levels" : q, "Accuracy" : a})
-df.to_csv("ucihar.csv", index = False)
+df.to_csv("isolet.csv", index = False)
