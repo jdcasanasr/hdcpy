@@ -1,5 +1,6 @@
 from hdcpy import *
 import sys
+import time
 
 alphabet = {
 
@@ -32,8 +33,8 @@ alphabet = {
 }
 
 
-training_feature_data, training_class_data  = load_dataset('/home/jdcasanasr/Development/hdcpy/data/ISOLET/isolet1+2+3+4.data')
-testing_feature_data, testing_class_data    = load_dataset('/home/jdcasanasr/Development/hdcpy/data/ISOLET/isolet5.data')
+training_feature_data, training_class_data  = load_dataset('/home/jdcasanasr/Development/hdc_profiling/data_dir/data/isolet/isolet1+2+3+4.data')
+testing_feature_data, testing_class_data    = load_dataset('/home/jdcasanasr/Development/hdc_profiling/data_dir/data/isolet/isolet5.data')
 
 # ISOLET dataset parameters.
 number_of_data_elements         = 6238
@@ -74,11 +75,13 @@ number_of_data_elements         = len(testing_class_data)
 number_of_classes               = 26
 number_of_correct_predictions   = 0
 number_of_class_instances       = 0
+times                           = []
 
 # Find all instances of letter a' in feature_matrix, and test classification.
 for test_class in range(1, number_of_classes + 1):
     for class_index in range(len(testing_class_data)):
         if alphabet[int(testing_class_data[class_index])] == alphabet[test_class]:
+            start = time.time()
             feature_vector = testing_feature_data[class_index]
             number_of_class_instances += 1
             #print(f'Instances: {number_of_class_instances} of {number_of_data_elements} | Correct Predictions: {number_of_correct_predictions} | Accuracy: {((number_of_correct_predictions / number_of_data_elements) * 100):0.2f}%', end = '\r')
@@ -90,6 +93,10 @@ for test_class in range(1, number_of_classes + 1):
             predicted_class = classify(associative_memory, query_hypervector)
             if (alphabet[predicted_class] == alphabet[test_class]):
                 number_of_correct_predictions += 1
+            end = time.time()
+            times.append(end - start)
+            #print(f'Elapsed Time per Query: {sum(times) / len(times):0.6f}')
 
-#print(f'Instances: {number_of_class_instances} of {number_of_data_elements} | Correct Predictions: {number_of_correct_predictions} | Accuracy: {((number_of_correct_predictions / number_of_data_elements) * 100):0.2f}%')
-print(f'{(number_of_correct_predictions / number_of_data_elements) * 100:0.2f}')
+
+print(f'Accuracy: {((number_of_correct_predictions / number_of_data_elements) * 100):0.2f}%')
+#print(f'{(number_of_correct_predictions / number_of_data_elements) * 100:0.2f}')

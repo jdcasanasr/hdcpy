@@ -1,6 +1,9 @@
-from hdcpy import *
 import numpy as np
+import pandas as pd
 import sys
+import time as tm
+
+from hdcpy import *
 
 def load_feature_data(file_path):
     with open(file_path, 'r') as f:
@@ -12,69 +15,78 @@ def load_class_data(file_path):
         data = [line.strip().split()[0] for line in f]
     return np.array(data, dtype = np.uint)
 
-training_feature_data   = load_feature_data('/home/jdcasanasr/Development/hdcpy/data/UCIHAR/X_train.txt')
-training_class_data     = load_class_data('/home/jdcasanasr/Development/hdcpy/data/UCIHAR/y_train.txt')
+training_features   = load_feature_data('/home/jdcasanasr/Development/neural_networks/data/X_train.txt')
+training_labels     = load_class_data('/home/jdcasanasr/Development/neural_networks/data/y_train.txt').astype(int) - 1
 
-testing_feature_data    = load_feature_data('/home/jdcasanasr/Development/hdcpy/data/UCIHAR/X_test.txt')
-testing_class_data      = load_class_data('/home/jdcasanasr/Development/hdcpy/data/UCIHAR/y_test.txt')
+testing_features    = load_feature_data('/home/jdcasanasr/Development/neural_networks/data/X_test.txt')
+testing_labels      = load_class_data('/home/jdcasanasr/Development/neural_networks/data/y_test.txt').astype(int) - 1
 
 # Dataset characteristics.
-number_of_classes                   = 6
-number_of_features_per_instance     = 561
-number_of_total_instances           = 7352
-number_of_instances_per_class       = 1407 # Some data is missing.
+number_of_classes           = np.max(training_labels) + 1
+number_of_features          = np.shape(training_features)[1]
+number_of_testing_vectors   = np.shape(testing_features)[0]
+signal_minimum_level        = -1.0
+signal_maximum_level        = 1.0
 
-# Training parameters.
-number_of_dimensions            = int(sys.argv[1])  # 8000
-number_of_quantization_levels   = int(sys.argv[2])  # 9
-quantization_lower_limit        = -1.0
-quantization_upper_limit        = 1.0
+# Training preparation.
+#number_of_dimensions            = int(sys.argv[1])
+#number_of_quantization_levels   = int(sys.argv[2])
 
-number_of_data_elements         = np.shape(testing_feature_data)[0]
-number_of_correct_predictions   = 0
-number_of_class_instances       = 0
+number_of_dimensions            = 10000
+number_of_quantization_levels   = 10
 
-# Trainig preparation.
-number_of_positions             = number_of_features_per_instance
+level_hypermatrix       = get_level_hypermatrix(number_of_quantization_levels, number_of_dimensions)
+position_hypermatrix    = get_position_hypermatrix(number_of_features, number_of_dimensions)
+quantization_range      = get_quantization_range(signal_minimum_level, signal_maximum_level, number_of_quantization_levels)
 
-level_hypermatrix               = get_level_hypermatrix(number_of_quantization_levels, number_of_dimensions)
-position_hypermatrix            = get_position_hypermatrix(number_of_positions, number_of_dimensions)
-quantization_range              = get_quantization_range(quantization_lower_limit, quantization_upper_limit, number_of_quantization_levels)
+associative_memory      = np.empty((number_of_classes, number_of_dimensions), np.bool_)
 
-associative_memory              = np.empty((number_of_classes, number_of_dimensions), np.bool_)
+# Testing preparation.
+number_of_correct_predictions = 0
 
-# Training test.
-for class_label in range(1, number_of_classes + 1): # Range = [1, 6]
-    prototype_hypermatrix           = np.empty(number_of_dimensions, dtype = np.bool_)
-    training_class_data_iterator    = np.nditer(training_class_data, flags = ['c_index'])
-    number_of_class_instances       = 0
+# Performance Metrics.
+accuracy                        = None
+training_time_per_dataset       = None
+average_testing_time_per_query  = None
+testing_times                   = []
 
-    # Iterate over all classes in the training dataset.
-    for class_item in training_class_data_iterator:
-        if class_item == class_label:
-            prototype_hypervector = encode(training_feature_data[training_class_data_iterator.index], quantization_range, level_hypermatrix, position_hypermatrix)
+# Training stage.
+training_time_begin = tm.time()
+
+# Train the model in class order (1, 2, 3, ...).
+for class_index in range(number_of_classes):
+    prototype_hypermatrix       = np.empty(number_of_dimensions, dtype = np.bool_)
+    training_labels_iterator    = np.nditer(training_labels, flags = ['c_index'])
+
+    for label in training_labels_iterator:
+        if class_index == label:
+            prototype_hypervector = encode(training_features[training_labels_iterator.index], quantization_range, level_hypermatrix, position_hypermatrix)
             prototype_hypermatrix = np.vstack((prototype_hypermatrix, prototype_hypervector))
 
-            number_of_class_instances += 1
+    # Build the class hypervector and store it.
+    associative_memory[class_index] = multibundle(prototype_hypermatrix[1:][:])
 
-            #print(f'Training For Class {class_label} | Found {number_of_class_instances} Instances So Far', end = '\r')
+training_time_end = tm.time()
 
-    # Build the class hypervector.
-    associative_memory[class_label - 1] = multibundle(prototype_hypermatrix[1:][:]) # Range = [0, 25]
 
-# Inference test.
-number_of_class_instances = 0
-for index in range(number_of_data_elements):
-    number_of_class_instances   += 1
-    feature_vector              = testing_feature_data[index][:]
-    actual_class                = testing_class_data[index]
+# Inference stage.
+for test_index in range(number_of_testing_vectors):
+    testing_time_begin = tm.time()
+
+    feature_vector              = testing_features[test_index][:]
+    actual_class                = testing_labels[test_index]
     query_hypervector           = encode(feature_vector, quantization_range, level_hypermatrix, position_hypermatrix)
     predicted_class             = classify(associative_memory, query_hypervector)
 
     if predicted_class == actual_class:
         number_of_correct_predictions += 1
 
-    #print(f'Instances: {number_of_class_instances} of {number_of_data_elements} | Correct Predictions: {number_of_correct_predictions} | Accuracy: {((number_of_correct_predictions / number_of_data_elements) * 100):0.2f}%', end = '\r')
+    testing_time_end = tm.time()
+    testing_times.append(testing_time_end - testing_time_begin)
 
-#print(f'Instances: {number_of_class_instances} of {number_of_data_elements} | Correct Predictions: {number_of_correct_predictions} | Accuracy: {((number_of_correct_predictions / number_of_data_elements) * 100):0.2f}%')
-print(f'{(number_of_correct_predictions / number_of_data_elements) * 100:0.2f}')
+# Compute performance metrics and output to console.
+accuracy                        = number_of_correct_predictions / number_of_testing_vectors * 100
+training_time_per_dataset       = training_time_end - training_time_begin
+average_testing_time_per_query  = sum(testing_times) / len(testing_times)
+
+print(f'{accuracy:0.2f},{training_time_per_dataset:0.6f},{average_testing_time_per_query:0.6f}')

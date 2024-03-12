@@ -128,4 +128,4 @@ def classify(associative_memory:np.array, query_hypervector:np.array):
         similarity_vector[class_index] = hamming_distance(associative_memory[class_index], query_hypervector)
 
     # (class, similarity)
-    return np.argmin(similarity_vector) + 1
+    return np.argmin(similarity_vector) # + 1
