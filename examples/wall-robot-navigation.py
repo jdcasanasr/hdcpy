@@ -5,7 +5,7 @@ import time as tm
 from hdcpy import *
 
 if __name__ == "__main__":
-    dataset_name    = 'isolet'
+    dataset_name    = 'wall-robot-navigation'
     dataset_path    = './data'
     test_proportion = 0.2
 

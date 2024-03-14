@@ -1,4 +1,40 @@
 import numpy as np
+import os
+
+from sklearn.datasets           import fetch_openml
+from sklearn.model_selection    import train_test_split
+from sklearn.preprocessing      import normalize
+
+# Free the user of manually providing its own copy of the dataset.
+def fetch_dataset(dataset_name: str, save_directory:str, test_proportion:float):
+    if not os.path.exists(save_directory):
+        os.makedirs(save_directory)
+
+    file_path = os.path.join(save_directory, f'{dataset_name}.csv')
+
+    if not os.path.exists(file_path):
+        dataset         = fetch_openml(name = dataset_name, version = 1, parser = 'auto')
+        data, target    = np.array(dataset.data).astype(np.float_), np.array(dataset.target).astype(np.int_)
+
+        training_features, testing_features, training_labels, testing_labels = train_test_split(data, target, test_size = test_proportion)
+
+        # Combine data and target into a single array.
+        dataset_array = np.column_stack((data, target))
+
+        np.savetxt(file_path, dataset_array, delimiter = ',', fmt = '%s')
+        
+        return training_features, testing_features, training_labels - 1, testing_labels - 1
+
+    else:
+        # Read pre-existing ".csv" file, split into features and labels
+        # and return both as numpy arrays.
+        dataset_array   = np.genfromtxt(file_path, delimiter = ',', dtype = np.float_)
+        data            = dataset_array[:, :-1]
+        target          = dataset_array[:, -1].astype(np.int_)
+
+        training_features, testing_features, training_labels, testing_labels = train_test_split(data, target, test_size = test_proportion)
+
+        return training_features, testing_features, training_labels - 1, testing_labels - 1
 
 # ToDo: Generalize for other VSA's.
 def random_hypervector(number_of_dimensions:np.uint) -> np.array:
@@ -24,7 +60,7 @@ def bundle(hypervector_u:np.array, hypervector_v:np.array) -> np.array:
 def multibundle(hypermatrix: np.array) -> np.array:
     number_of_rows, number_of_columns   = np.shape(hypermatrix)
     number_of_dimensions                = number_of_columns
-    tie_breaking_hypervector             = random_hypervector(number_of_dimensions)
+    tie_breaking_hypervector            = random_hypervector(number_of_dimensions)
 
     number_of_true  = np.sum(hypermatrix, axis = 0)
     number_of_false = np.subtract(number_of_rows, number_of_true)
