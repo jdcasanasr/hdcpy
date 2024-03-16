@@ -6,7 +6,7 @@ from hdcpy import *
 
 if __name__ == "__main__":
     dataset_name    = 'har'
-    dataset_path    = './data'
+    dataset_path    = '../data'
     test_proportion = 0.3
 
     training_features, testing_features, training_labels, testing_labels = fetch_dataset(dataset_name, dataset_path, test_proportion)
@@ -76,4 +76,4 @@ if __name__ == "__main__":
     training_time_per_dataset       = training_time_end - training_time_begin
     average_testing_time_per_query  = sum(testing_times) / len(testing_times)
 
-    print(f'{accuracy:0.2f},{training_time_per_dataset:0.6f},{average_testing_time_per_query:0.6f}')
+    print(f'{number_of_dimensions},{number_of_quantization_levels},{accuracy:0.2f},{training_time_per_dataset:0.6f},{average_testing_time_per_query:0.6f}')

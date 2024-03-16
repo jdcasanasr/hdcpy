@@ -6,7 +6,7 @@ from hdcpy import *
 
 if __name__ == "__main__":
     dataset_name    = 'wall-robot-navigation'
-    dataset_path    = './data'
+    dataset_path    = '../data'
     test_proportion = 0.2
 
     training_features, testing_features, training_labels, testing_labels = fetch_dataset(dataset_name, dataset_path, test_proportion)
@@ -22,14 +22,11 @@ if __name__ == "__main__":
     number_of_dimensions            = int(sys.argv[1])
     number_of_quantization_levels   = int(sys.argv[2])
 
-    #number_of_dimensions            = 10000
-    #number_of_quantization_levels   = 10
-
     level_hypermatrix       = get_level_hypermatrix(number_of_quantization_levels, number_of_dimensions)
     position_hypermatrix    = get_position_hypermatrix(number_of_features, number_of_dimensions)
     quantization_range      = get_quantization_range(signal_minimum_level, signal_maximum_level, number_of_quantization_levels)
 
-    associative_memory      = np.empty((number_of_classes, number_of_dimensions), np.bool_)
+    associative_memory = np.empty((number_of_classes, number_of_dimensions), np.bool_)
 
     # Testing preparation.
     number_of_correct_predictions = 0
@@ -79,4 +76,4 @@ if __name__ == "__main__":
     training_time_per_dataset       = training_time_end - training_time_begin
     average_testing_time_per_query  = sum(testing_times) / len(testing_times)
 
-    print(f'{accuracy:0.2f},{training_time_per_dataset:0.6f},{average_testing_time_per_query:0.6f}')
+    print(f'{number_of_dimensions},{number_of_quantization_levels},{accuracy:0.2f},{training_time_per_dataset:0.6f},{average_testing_time_per_query:0.6f}')
