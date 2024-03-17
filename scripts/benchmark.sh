@@ -8,7 +8,7 @@ if [ ! -d "../logs" ]; then
     mkdir "../logs"
 fi
 
-# Check if a previous log exists, and erase it.
+# Check if a previous log exists, and if so, erase it.
 if [ -f "../logs/${python_script_name//.py}.csv" ]; then
     rm "../logs/${python_script_name//.py}.csv"
 fi
@@ -18,14 +18,15 @@ if [ -d "../__pycache" ]; then
     rm -rf __pycache__
 fi
 
-# Loop for benchmarking
+# Actual benchmark.
 for number_of_quantization_levels in {10..100..10}
 do
     for number_of_dimensions in {1000..10000..1000}
     do
         for number_of_tests in {1..5}
         do
-            python3 "$1" "$number_of_dimensions" "$number_of_quantization_levels" >> "../logs/${python_script_name//.py}.csv"
+            # Allocate the first core to the Python interpreter.
+            taskset -c 0 python3 "$1" "$number_of_dimensions" "$number_of_quantization_levels" >> "../logs/${python_script_name//.py}.csv"
 
             # Output progress to the user.
             ((progress++))
