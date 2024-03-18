@@ -26,7 +26,7 @@ do
         for number_of_tests in {1..5}
         do
             # Allocate the first core to the Python interpreter.
-            taskset -c 0 python3 "$1" "$number_of_dimensions" "$number_of_quantization_levels" >> "../logs/${python_script_name//.py}.csv"
+            taskset -c 0 python3 "$1" "$number_of_dimensions" "$number_of_quantization_levels" >> "../logs/${python_script_name//.py}_big.csv"
 
             # Output progress to the user.
             ((progress++))
