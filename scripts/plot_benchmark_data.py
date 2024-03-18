@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 log_file        = sys.argv[1]
-file_name       = re.sub('.log', '', os.path.basename(sys.argv[1]))
+file_name       = re.sub(r'\.[^.]*$', '', os.path.basename(sys.argv[1]))
 log_dataframe   = pd.read_csv(log_file, header = None)
 
 dimensions          = np.array(log_dataframe.iloc[:, 0].values)
