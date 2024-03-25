@@ -1,4 +1,46 @@
 import numpy as np
+import os
+
+from sklearn.datasets           import fetch_openml
+from sklearn.model_selection    import train_test_split
+
+def fetch_dataset(dataset_name: str, save_directory:str, test_proportion:float):
+    if not os.path.exists(save_directory):
+        os.makedirs(save_directory)
+
+    file_path = os.path.join(save_directory, f'{dataset_name}.csv')
+
+    # Check if dataset already exists, and if not,
+    # fetch it from the internet.
+    if not os.path.exists(file_path):
+        dataset = fetch_openml(name=dataset_name, version=1, parser='auto')
+        data, target = np.array(dataset.data).astype(np.float_), np.array(dataset.target).astype(np.int_)
+
+        # Normalize feature values between 0 and 1, if needed.
+        if not np.all((data >= 0) & (data <= 1)):
+            data = data / np.max(data)
+
+        training_features, testing_features, training_labels, testing_labels = train_test_split(data, target, test_size=test_proportion)
+
+        # Combine data and target into a single array, and
+        # store it in .csv format.
+        dataset_array = np.column_stack((data, target))
+
+        np.savetxt(file_path, dataset_array, delimiter=',', fmt='%s')
+
+        return training_features, testing_features, training_labels - 1, testing_labels - 1
+
+    else:
+        # Read pre-existing ".csv" file, split into features and labels
+        # and return both as numpy arrays.
+        dataset_array = np.genfromtxt(file_path, delimiter=',', dtype=np.float_)
+        data = dataset_array[:, :-1]
+        target = dataset_array[:, -1].astype(np.int_)
+
+        training_features, testing_features, training_labels, testing_labels = train_test_split(data, target, test_size=test_proportion)
+
+        return training_features, testing_features, training_labels - 1, testing_labels - 1
+
 
 # ToDo: Generalize for other VSA's.
 def random_hypervector(number_of_dimensions:np.uint) -> np.array:
@@ -20,53 +62,17 @@ def bundle(hypervector_u:np.array, hypervector_v:np.array) -> np.array:
 
     return np.logical_or(np.logical_and(hypervector_w, np.logical_xor(hypervector_u, hypervector_v, dtype = np.bool_), dtype = np.bool_), np.logical_and(hypervector_u, hypervector_v, dtype = np.bool_), dtype = np.bool_)
 
-# ToDo: Add check for different dimensionalities.
-def multibundle(hypermatrix:np.array) -> np.array:
+# Alternative version.
+def multibundle(hypermatrix: np.array) -> np.array:
     number_of_rows, number_of_columns   = np.shape(hypermatrix)
     number_of_dimensions                = number_of_columns
-    bundle_hypervector                  = np.empty(number_of_dimensions, np.bool_)
+    tie_breaking_hypervector            = random_hypervector(number_of_dimensions)
 
-    # Even number of hypervectors case.
-    if number_of_rows % 2 == 0:
-        # Append a random hypervector to break any possible ties.
-        new_hypermatrix         = np.empty((number_of_rows + 1, number_of_columns), np.bool_)
-        # Check this part!
-        new_hypermatrix[:-1]    = hypermatrix
-        new_hypermatrix[-1]     = random_hypervector(number_of_dimensions)
-        
-        for column_index in range(number_of_columns):
-            number_of_true      = 0
-            number_of_false     = 0
+    number_of_true  = np.sum(hypermatrix, axis = 0)
+    number_of_false = np.subtract(number_of_rows, number_of_true)
 
-            for row_index in range(number_of_rows + 1):
-                if new_hypermatrix[row_index][column_index] == True:
-                    number_of_true += 1
-                else:
-                    number_of_false += 1
-
-            if number_of_true > number_of_false:
-                bundle_hypervector[column_index] = True
-
-            else:
-                bundle_hypervector[column_index] = False
-
-    # Odd number of hypervectors case.
-    else:
-        for column_index in range(number_of_columns):
-            number_of_true      = 0
-            number_of_false     = 0
-
-            for row_index in range(number_of_rows):
-                if hypermatrix[row_index][column_index] == True:
-                    number_of_true += 1
-                else:
-                    number_of_false += 1
-
-            if number_of_true > number_of_false:
-                bundle_hypervector[column_index] = True
-
-            else:
-                bundle_hypervector[column_index] = False
+    bundle_hypervector = bundle_hypervector = np.where(number_of_true > number_of_false, True,
+                                   np.where(number_of_true < number_of_false, False, tie_breaking_hypervector))
 
     return bundle_hypervector
 
@@ -112,28 +118,6 @@ def get_position_hypermatrix(number_of_positions:np.uint, number_of_dimensions:n
 def get_quantization_range(lower_limit:np.double, upper_limit:np.double, number_of_levels:np.uint) -> np.array:
     return np.linspace(lower_limit, upper_limit, number_of_levels)
 
-# Cram the whole dataset into a single array, stripping blanks and
-# commas, and convertig values into floating-point numbers.
-def load_data(file_path):
-    data = []
-    with open(file_path, 'r') as file:
-        for line in file:
-            values = [float(val) for val in line.strip().split(',')]
-            data.append(values)
-    return data
-
-# ToDo: Generalize for any dataset in .csv format.
-def load_dataset(dataset_path):
-    data_matrix     = load_data(dataset_path)
-    feature_matrix  = []
-    class_vector    = []
-
-    for data_vector in data_matrix:
-        feature_matrix.append(data_vector[0:616])
-        class_vector.append(data_vector[617])
-
-    return feature_matrix, class_vector
-
 # Return the level hypervector matching a given sample.
 def get_level_hypervector(feature:np.double, quantization_range:np.array, level_hypermatrix:np.array) -> np.array:
     index = np.digitize(feature, quantization_range, True)
@@ -158,10 +142,10 @@ def encode(feature_vector:np.array, quantization_range:np.array, level_hypermatr
 # minimum distance with a query vector.
 def classify(associative_memory:np.array, query_hypervector:np.array):
     number_of_classes = np.shape(associative_memory)[0]
-    similarity_vector = np.empty(number_of_classes, np.uint)
+    similarity_vector = np.empty(number_of_classes, np.double)
 
     for class_index in range(number_of_classes):
-        similarity_vector[class_index] = hamming_similarity(associative_memory[class_index], query_hypervector)
+        similarity_vector[class_index] = hamming_distance(associative_memory[class_index], query_hypervector)
 
     # (class, similarity)
-    return (np.argmax(similarity_vector) + 1, np.max(similarity_vector))
+    return np.argmin(similarity_vector) # + 1
