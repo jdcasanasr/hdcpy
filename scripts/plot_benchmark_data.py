@@ -12,8 +12,8 @@ log_dataframe   = pd.read_csv(log_file, header = None)
 dimensions          = np.array(log_dataframe.iloc[:, 0].values)
 quantization_levels = np.array(log_dataframe.iloc[:, 1].values)
 accuracy            = np.array(log_dataframe.iloc[:, 2].values)
-time_per_dataset    = np.array(log_dataframe.iloc[:, 3].values)
-time_per_query      = np.array(log_dataframe.iloc[:, 4].values)
+#time_per_dataset    = np.array(log_dataframe.iloc[:, 3].values)
+#time_per_query      = np.array(log_dataframe.iloc[:, 4].values)
 
 # Note: d = dimensions. q = quantization levels.
 minimum_d   = np.min(dimensions)
@@ -27,7 +27,8 @@ q_step      = np.sort(np.unique(quantization_levels))[1] - minimum_q
 x_axis = np.arange(minimum_d, maximum_d + d_step, d_step)
 
 x_ticks = np.linspace(np.min(dimensions), np.max(dimensions), 10)
-y_ticks = np.linspace(np.min(accuracy), np.max(accuracy), 10)
+#y_ticks = np.linspace(np.min(accuracy), np.max(accuracy), 10)
+y_ticks = np.linspace(55, 85, 10)
 
 # Plot 'accuracy' vs. dimensions.
 for number_of_quantization_levels in range(minimum_q, maximum_q + q_step, q_step):
@@ -43,14 +44,16 @@ for number_of_quantization_levels in range(minimum_q, maximum_q + q_step, q_step
 
     plt.plot(x_axis, y_axis, label = f'Q = {number_of_quantization_levels}')
 
-plt.title(f'{file_name.upper()} Dataset')
+# ToDo: Prompt the user for a custom title.
+plt.title('UCIHAR Dataset')
 plt.xlabel('Number of Dimensions (Bits)')
 plt.xticks(x_axis)
 plt.ylabel('Accuracy (%)')
 plt.yticks(y_ticks)
 plt.legend()
 plt.grid()
-plt.savefig(f'../assets/{file_name}.pdf', format = 'pdf')
+#plt.show()
+plt.savefig(f'../assets/{file_name}.jpeg', format = 'jpeg')
 
 # Plot 'accuracy' vs. 'time_per_dataset'.
 # Code goes here...

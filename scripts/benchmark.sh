@@ -1,4 +1,6 @@
 #!/bin/bash
+# ToDo: Make a general script, maybe parsing a .json
+# or .yaml file for configuration.
 
 total_iterations=$(( (100 / 10) * (10000 / 1000) * 5 ))
 progress=0
@@ -19,14 +21,14 @@ if [ -d "../__pycache" ]; then
 fi
 
 # Actual benchmark.
-for number_of_quantization_levels in {10..100..10}
+for number_of_quantization_levels in {2..10..1}
 do
     for number_of_dimensions in {1000..10000..1000}
     do
         for number_of_tests in {1..5}
         do
             # Allocate the first core to the Python interpreter.
-            taskset -c 0 python3 "$1" "$number_of_dimensions" "$number_of_quantization_levels" >> "../logs/${python_script_name//.py}_big.csv"
+            python3 "$1" "$number_of_dimensions" "$number_of_quantization_levels" >> "../logs/${python_script_name//.py}_small.csv"
 
             # Output progress to the user.
             ((progress++))
