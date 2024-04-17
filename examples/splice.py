@@ -4,76 +4,68 @@ import time as tm
 
 from hdcpy import *
 
-if __name__ == "__main__":
-    dataset_name    = 'isolet'
-    dataset_path    = '../data'
-    test_proportion = 0.2
+def encode_dna_sequence ():
+    pass
 
-    training_features, testing_features, training_labels, testing_labels = fetch_dataset(dataset_name, dataset_path, test_proportion)
+number_of_dimensions    = 10000
 
-    # Dataset characteristics.
-    number_of_classes           = np.max(training_labels) + 1
-    number_of_features          = np.shape(training_features)[1]
-    number_of_testing_vectors   = np.shape(testing_features)[0]
-    signal_minimum_level        = -1.0
-    signal_maximum_level        = 1.0
+nucleotides = {
+    'A' : random_hypervector(number_of_dimensions),
+    'C' : random_hypervector(number_of_dimensions),
+    'G' : random_hypervector(number_of_dimensions),
+    'T' : random_hypervector(number_of_dimensions)
+}
 
-    # Training preparation.
-    number_of_dimensions            = int(sys.argv[1])
-    number_of_quantization_levels   = int(sys.argv[2])
+labels = {'EI', 'IE', 'N'}
 
-    level_hypermatrix       = get_level_hypermatrix(number_of_quantization_levels, number_of_dimensions)
-    position_hypermatrix    = get_position_hypermatrix(number_of_features, number_of_dimensions)
-    quantization_range      = get_quantization_range(signal_minimum_level, signal_maximum_level, number_of_quantization_levels)
+label_dictionary = {
+    'EI'    : 0,
+    'IE'    : 1,
+    'N'     : 2
+}
 
-    associative_memory      = np.empty((number_of_classes, number_of_dimensions), np.bool_)
+# Fetch and split dataset.
+dataset_name    = 'splice'
+dataset_path    = '../data'
+test_proportion = 0.2
 
-    # Testing preparation.
-    number_of_correct_predictions = 0
+dataset         = fetch_openml(name=dataset_name, version=1, parser='auto')
+data, target    = dataset.data, dataset.target
+training_features, testing_features, training_labels, testing_labels = train_test_split(data, target, test_size=test_proportion)
 
-    # Performance Metrics.
-    accuracy                        = None
-    training_time_per_dataset       = None
-    average_testing_time_per_query  = None
-    testing_times                   = []
+# Extract values from dataframes.
+training_features   = training_features.values
+testing_features    = testing_features.values
+training_labels     = training_labels.values
+testing_labels      = testing_labels.values
 
-    # Training stage.
-    training_time_begin = tm.time()
+# Populate item memory with ID hypervectors.
+item_memory_size    = np.shape(training_features)[0]
+item_memory         = np.empty((item_memory_size, number_of_dimensions))
 
-    # Train the model in class order (1, 2, 3, ...).
-    for class_index in range(number_of_classes):
-        prototype_hypermatrix       = np.empty(number_of_dimensions, dtype = np.bool_)
-        training_labels_iterator    = np.nditer(training_labels, flags = ['c_index'])
+associative_memory = np.empty((3, number_of_dimensions), np.bool_)
 
-        for label in training_labels_iterator:
-            if class_index == label:
-                prototype_hypervector = encode(training_features[training_labels_iterator.index], quantization_range, level_hypermatrix, position_hypermatrix)
-                prototype_hypermatrix = np.vstack((prototype_hypermatrix, prototype_hypervector))
+for index in range(item_memory_size):
+    item_memory[index] = random_hypervector(number_of_dimensions)
 
-        # Build the class hypervector and store it.
-        associative_memory[class_index] = multibundle(prototype_hypermatrix[1:][:])
+# Train the model in label order.
+for label in range(labels):
+    prototype_hypermatrix       = np.empty(number_of_dimensions, dtype = np.bool_)
+    training_labels_iterator    = np.nditer(training_labels, flags = ['c_index'])
 
-    training_time_end = tm.time()
+    # 1. Traverse the training_label array.
+    # 2. Check if the label matches our current label.
+    # 3. If so, transform the vector in the label's index.
+    # 4. Store it in the prototype hypermatrix.
+    for training_label in training_labels_iterator:
+        if training_label == label:
+            # ToDo: Define 'encode_dna_sequence'.
+            prototype_hypervector = encode_dna_sequence(training_features[training_labels_iterator.index], nucleotides, item_memory)
+            prototype_hypermatrix = np.vstack((prototype_hypermatrix, prototype_hypervector))
 
+    # Build the class hypervector and store it.
+    associative_memory[label_dictionary[label]] = multibundle(prototype_hypermatrix[1:][:])
 
-    # Inference stage.
-    for test_index in range(number_of_testing_vectors):
-        testing_time_begin = tm.time()
+pass
 
-        feature_vector              = testing_features[test_index][:]
-        actual_class                = testing_labels[test_index]
-        query_hypervector           = encode(feature_vector, quantization_range, level_hypermatrix, position_hypermatrix)
-        predicted_class             = classify(associative_memory, query_hypervector)
-
-        if predicted_class == actual_class:
-            number_of_correct_predictions += 1
-
-        testing_time_end = tm.time()
-        testing_times.append(testing_time_end - testing_time_begin)
-
-    # Compute performance metrics and output to console.
-    accuracy                        = number_of_correct_predictions / number_of_testing_vectors * 100
-    training_time_per_dataset       = training_time_end - training_time_begin
-    average_testing_time_per_query  = sum(testing_times) / len(testing_times)
-
-    print(f'{number_of_dimensions},{number_of_quantization_levels},{accuracy:0.2f},{training_time_per_dataset:0.6f},{average_testing_time_per_query:0.6f}')
+# Dataset characteristics.
