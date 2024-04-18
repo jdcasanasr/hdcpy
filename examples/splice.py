@@ -13,18 +13,25 @@ def encode_dna_sequence (input_sequence:np.array, nucleotides:dict, item_memory:
     hypermatrix             = np.empty(np.shape(item_memory)[1], dtype = np.bool_)
 
     for nucleotide in input_sequence_iterator:
-        bind_hypervector = bind(nucleotides[str(nucleotide)], item_memory[input_sequence_iterator.index])
-        np.vstack((hypermatrix, bind_hypervector))
+        bind_hypervector    = bind(nucleotides[str(nucleotide)], item_memory[input_sequence_iterator.index])
+        hypermatrix         = np.vstack((hypermatrix, bind_hypervector))
 
     return multibundle(hypermatrix)
 
 number_of_dimensions    = 10000
 
 nucleotides = {
+    # Actual nucleotides.
     'A' : random_hypervector(number_of_dimensions),
     'C' : random_hypervector(number_of_dimensions),
     'G' : random_hypervector(number_of_dimensions),
-    'T' : random_hypervector(number_of_dimensions)
+    'T' : random_hypervector(number_of_dimensions),
+
+    # Ambiguity placeholders.
+    'D' : random_hypervector(number_of_dimensions),
+    'N' : random_hypervector(number_of_dimensions),
+    'S' : random_hypervector(number_of_dimensions),
+    'R' : random_hypervector(number_of_dimensions)
 }
 
 labels = {'EI', 'IE', 'N'}
@@ -75,5 +82,19 @@ for label in labels:
 
     # Build the class hypervector and store it.
     associative_memory[label_dictionary[label]] = multibundle(prototype_hypermatrix[1:][:])
+
+# Inference stage.
+number_of_correct_predictions   = 0
+testing_features_iterator       = np.nditer(training_labels, flags = ['c_index', 'refs_ok'])
+
+# 1. Encode the current feature vector.
+# 2. Classify the encoded vector.
+# 3. Compare both the predicted and the actual label.
+for testing_feature in testing_features_iterator:
+    query_hypervector   = encode_dna_sequence(testing_features[testing_features_iterator.index], nucleotides, item_memory)
+    predicted_class     = classify(associative_memory, query_hypervector)
+
+    if predicted_class == label_dictionary[testing_labels[testing_features_iterator.index]]:
+        number_of_correct_predictions += 1
 
 pass
