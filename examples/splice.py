@@ -21,13 +21,13 @@ def encode_dna_sequence (input_sequence:np.array, nucleotides:dict, item_memory:
 number_of_dimensions    = 10000
 
 nucleotides = {
-    # Actual nucleotides.
+    # Nucleotides.
     'A' : random_hypervector(number_of_dimensions),
     'C' : random_hypervector(number_of_dimensions),
     'G' : random_hypervector(number_of_dimensions),
     'T' : random_hypervector(number_of_dimensions),
 
-    # Ambiguity placeholders.
+    # "Ambiguous" nucleotide placeholders.
     'D' : random_hypervector(number_of_dimensions),
     'N' : random_hypervector(number_of_dimensions),
     'S' : random_hypervector(number_of_dimensions),
@@ -66,7 +66,10 @@ associative_memory = np.empty((3, number_of_dimensions), np.bool_)
 for index in range(item_memory_size):
     item_memory[index] = random_hypervector(number_of_dimensions)
 
+testing_times                   = []
+
 # Train the model in label order.
+training_time_begin = tm.time()
 for label in labels:
     prototype_hypermatrix       = np.empty(number_of_dimensions, dtype = np.bool_)
     training_labels_iterator    = np.nditer(training_labels, flags = ['c_index', 'refs_ok'])
@@ -82,19 +85,31 @@ for label in labels:
 
     # Build the class hypervector and store it.
     associative_memory[label_dictionary[label]] = multibundle(prototype_hypermatrix[1:][:])
+training_time_end = tm.time()
 
 # Inference stage.
 number_of_correct_predictions   = 0
+number_of_tests                 = 0
 testing_features_iterator       = np.nditer(training_labels, flags = ['c_index', 'refs_ok'])
 
 # 1. Encode the current feature vector.
 # 2. Classify the encoded vector.
 # 3. Compare both the predicted and the actual label.
-for testing_feature in testing_features_iterator:
-    query_hypervector   = encode_dna_sequence(testing_features[testing_features_iterator.index], nucleotides, item_memory)
+for feature_index in range(np.shape(testing_features)[0]):
+    testing_time_begin  = tm.time()
+    query_hypervector   = encode_dna_sequence(testing_features[feature_index], nucleotides, item_memory)
     predicted_class     = classify(associative_memory, query_hypervector)
+    number_of_tests     += 1
 
-    if predicted_class == label_dictionary[testing_labels[testing_features_iterator.index]]:
+    if predicted_class == label_dictionary[testing_labels[feature_index]]:
         number_of_correct_predictions += 1
 
-pass
+    testing_time_end = tm.time()
+    testing_times.append(testing_time_end - testing_time_begin)
+
+ # Compute performance metrics and output to console.
+    accuracy                        = number_of_correct_predictions / number_of_tests * 100
+    training_time_per_dataset       = training_time_end - training_time_begin
+    average_testing_time_per_query  = sum(testing_times) / len(testing_times)
+
+print(f'{number_of_dimensions},{8},{accuracy:0.2f},{training_time_per_dataset:0.6f},{average_testing_time_per_query:0.6f}')
