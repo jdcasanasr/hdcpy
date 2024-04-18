@@ -4,8 +4,19 @@ import time as tm
 
 from hdcpy import *
 
-def encode_dna_sequence ():
-    pass
+def encode_dna_sequence (input_sequence:np.array, nucleotides:dict, item_memory:np.array) -> np.array:
+    # 1. Read every element in 'input_sequence'.
+    # 2. Depending on its position, bind the proper nucleotide[element] and item_memory[index].
+    # 3. Stack each encoded element.
+    # 4. Once done, multibundle the stack.
+    input_sequence_iterator = np.nditer(input_sequence, flags = ['c_index', 'refs_ok'])
+    hypermatrix             = np.empty(np.shape(item_memory)[1], dtype = np.bool_)
+
+    for nucleotide in input_sequence_iterator:
+        bind_hypervector = bind(nucleotides[str(nucleotide)], item_memory[input_sequence_iterator.index])
+        np.vstack((hypermatrix, bind_hypervector))
+
+    return multibundle(hypermatrix)
 
 number_of_dimensions    = 10000
 
@@ -49,9 +60,9 @@ for index in range(item_memory_size):
     item_memory[index] = random_hypervector(number_of_dimensions)
 
 # Train the model in label order.
-for label in range(labels):
+for label in labels:
     prototype_hypermatrix       = np.empty(number_of_dimensions, dtype = np.bool_)
-    training_labels_iterator    = np.nditer(training_labels, flags = ['c_index'])
+    training_labels_iterator    = np.nditer(training_labels, flags = ['c_index', 'refs_ok'])
 
     # 1. Traverse the training_label array.
     # 2. Check if the label matches our current label.
@@ -59,7 +70,6 @@ for label in range(labels):
     # 4. Store it in the prototype hypermatrix.
     for training_label in training_labels_iterator:
         if training_label == label:
-            # ToDo: Define 'encode_dna_sequence'.
             prototype_hypervector = encode_dna_sequence(training_features[training_labels_iterator.index], nucleotides, item_memory)
             prototype_hypermatrix = np.vstack((prototype_hypermatrix, prototype_hypervector))
 
@@ -67,5 +77,3 @@ for label in range(labels):
     associative_memory[label_dictionary[label]] = multibundle(prototype_hypermatrix[1:][:])
 
 pass
-
-# Dataset characteristics.
