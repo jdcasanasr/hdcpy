@@ -1,8 +1,44 @@
 import numpy as np
-import sys
 import time as tm
+import os
 
 from hdcpy import *
+
+from sklearn.datasets           import fetch_openml
+from sklearn.model_selection    import train_test_split
+
+def fetch_dataset(dataset_name: str, save_directory:str, test_proportion:float):
+    if not os.path.exists(save_directory):
+        os.makedirs(save_directory)
+
+    file_path = os.path.join(save_directory, f'{dataset_name}.csv')
+
+    # Check if the dataset already exists, and if not,
+    # fetch it from the internet.
+    if not os.path.exists(file_path):
+        dataset         = fetch_openml(name = dataset_name, version = 1, parser = 'auto')
+        data, target    = np.array(dataset.data), np.array(dataset.target)
+
+        training_features, testing_features, training_labels, testing_labels = train_test_split(data, target, test_size = test_proportion)
+
+        # Combine data and target into a single array, and
+        # store it in .csv format.
+        dataset_array = np.column_stack((data, target))
+
+        np.savetxt(file_path, dataset_array, delimiter = ',', fmt = '%s')
+
+        return training_features, testing_features, training_labels, testing_labels
+    
+    else:
+        # Read pre-existing ".csv" file, split it into features and labels
+        # and return both as numpy arrays.
+        dataset_array   = np.genfromtxt(file_path, delimiter = ',', dtype = np.str_)
+        data            = dataset_array[:, :-1]
+        target          = dataset_array[:, -1]
+
+        training_features, testing_features, training_labels, testing_labels = train_test_split(data, target, test_size = test_proportion)
+
+        return training_features, testing_features, training_labels, testing_labels
 
 def encode_dna_sequence (input_sequence:np.array, nucleotides:dict, item_memory:np.array) -> np.array:
     # 1. Read every element in 'input_sequence'.
@@ -16,7 +52,7 @@ def encode_dna_sequence (input_sequence:np.array, nucleotides:dict, item_memory:
         bind_hypervector    = bind(nucleotides[str(nucleotide)], item_memory[input_sequence_iterator.index])
         hypermatrix         = np.vstack((hypermatrix, bind_hypervector))
 
-    return multibundle(hypermatrix)
+    return multibundle(hypermatrix[1:][:])
 
 number_of_dimensions    = 10000
 
@@ -44,18 +80,10 @@ label_dictionary = {
 
 # Fetch and split dataset.
 dataset_name    = 'splice'
-dataset_path    = '../data'
+dataset_path    = '/home/jdcasanasr/Development/hdcpy/data'
 test_proportion = 0.2
 
-dataset         = fetch_openml(name=dataset_name, version=1, parser='auto')
-data, target    = dataset.data, dataset.target
-training_features, testing_features, training_labels, testing_labels = train_test_split(data, target, test_size=test_proportion)
-
-# Extract values from dataframes.
-training_features   = training_features.values
-testing_features    = testing_features.values
-training_labels     = training_labels.values
-testing_labels      = testing_labels.values
+training_features, testing_features, training_labels, testing_labels = fetch_dataset(dataset_name, dataset_path, test_proportion)
 
 # Populate item memory with ID hypervectors.
 item_memory_size    = np.shape(training_features)[0]
