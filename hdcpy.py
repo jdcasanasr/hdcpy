@@ -147,6 +147,11 @@ def multibundle(hypermatrix: np.array, vsa:np.str_) -> np.array:
                 else:
                     return np.sign(np.sum(hypermatrix, axis = 0))
 
+# ToDo: Check if a negative shift amount makes sense
+# in the context of HDC.
+def permute(hypervector:np.array, shift_amount:np.int_) -> np.array:
+    return np.roll(hypervector, shift_amount)
+
 def flip(hypervector_u:np.array, number_of_positions:np.uint) -> np.array:
     number_of_dimensions = hypervector_u.size
 
