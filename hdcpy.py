@@ -73,8 +73,22 @@ def cosine_similarity(hypervector_u:np.array, hypervector_v:np.array) -> np.doub
 
     return dot_product / (magnitude_u * magnitude_v)
 
-def bind(hypervector_u:np.array, hypervector_v:np.array) -> np.array:
-    return np.logical_xor(hypervector_u, hypervector_v, dtype = np.bool_)
+def bind(hypervector_u:np.array, hypervector_v:np.array, vsa:np.str_) -> np.array:
+    supported_vsas = ['BSC', 'MAP']
+
+    if vsa not in supported_vsas:
+        raise ValueError(f'Invalid VSA: Expected one of the following: {supported_vsas}')
+
+    else:
+        match vsa:
+            case 'BSC':
+                return np.logical_xor(hypervector_u, hypervector_v, dtype = np.bool_)
+            
+            case 'MAP':
+                return np.multiply(hypervector_u, hypervector_v, dtype = np.int_)
+            
+            case _:
+                return np.multiply(hypervector_u, hypervector_v, dtype = np.int_)
 
 # ToDo: Add check for different dimensionalities.
 def bundle(hypervector_u:np.array, hypervector_v:np.array) -> np.array:
