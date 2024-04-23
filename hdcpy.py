@@ -42,15 +42,36 @@ def fetch_dataset(dataset_name: str, save_directory:str, test_proportion:float):
         return training_features, testing_features, training_labels - 1, testing_labels - 1
 
 
-# ToDo: Generalize for other VSA's.
-def random_hypervector(number_of_dimensions:np.uint) -> np.array:
-    return np.random.choice([True, False], size = number_of_dimensions, p = [0.5, 0.5])
+# Returns a random hypervector with a BSC or MAP Vector-Symbolic Architecture scheme.
+def random_hypervector(number_of_dimensions:np.uint, vsa:np.str_) -> np.array:
+    supported_vsas = ['BSC', 'MAP']
+
+    if vsa not in supported_vsas:
+        raise ValueError(f'Invalid VSA: Expected one of the following: {supported_vsas}')
+
+    else:
+        match vsa:
+            case 'BSC':
+                return np.random.choice([True, False], size = number_of_dimensions, p = [0.5, 0.5])
+            
+            case 'MAP':
+                return np.random.choice([-1, 1], size = number_of_dimensions, p = [0.5, 0.5])
+            
+            case _:
+                return np.random.choice([True, False], size = number_of_dimensions, p = [0.5, 0.5])
 
 # ToDo: Add check for different distances.
 def hamming_distance(hypervector_u:np.array, hypervector_v:np.array) -> np.double:
     number_of_dimensions = hypervector_u.size
 
     return np.count_nonzero(np.logical_xor(hypervector_u, hypervector_v, dtype = np.bool_)) / number_of_dimensions
+
+def cosine_similarity(hypervector_u:np.array, hypervector_v:np.array) -> np.double:
+    dot_product = np.dot(hypervector_u, hypervector_v)
+    magnitude_u = np.linalg.norm(hypervector_u)
+    magnitude_v = np.linalg.norm(hypervector_v)
+
+    return dot_product / (magnitude_u * magnitude_v)
 
 def bind(hypervector_u:np.array, hypervector_v:np.array) -> np.array:
     return np.logical_xor(hypervector_u, hypervector_v, dtype = np.bool_)
