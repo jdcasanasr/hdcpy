@@ -19,8 +19,8 @@ if __name__ == "__main__":
     signal_maximum_level        = 1.0
 
     # Training preparation.
-    number_of_dimensions            = int(sys.argv[1])
-    number_of_quantization_levels   = int(sys.argv[2])
+    number_of_dimensions            = 10000
+    number_of_quantization_levels   = 10
 
     level_hypermatrix       = get_level_hypermatrix(number_of_quantization_levels, number_of_dimensions)
     position_hypermatrix    = get_position_hypermatrix(number_of_features, number_of_dimensions)
@@ -51,7 +51,7 @@ if __name__ == "__main__":
                 prototype_hypermatrix = np.vstack((prototype_hypermatrix, prototype_hypervector))
 
         # Build the class hypervector and store it.
-        associative_memory[class_index] = multibundle(prototype_hypermatrix[1:][:])
+        associative_memory[class_index] = multibundle(prototype_hypermatrix[1:][:], 'BSC')
 
     training_time_end = tm.time()
 

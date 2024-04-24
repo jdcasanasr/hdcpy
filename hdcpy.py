@@ -52,13 +52,13 @@ def random_hypervector(number_of_dimensions:np.uint, vsa:np.str_) -> np.array:
     else:
         match vsa:
             case 'BSC':
-                return np.random.choice([True, False], size = number_of_dimensions, p = [0.5, 0.5])
+                return np.random.choice([1, 0], size = number_of_dimensions, p = [0.5, 0.5])
             
             case 'MAP':
                 return np.random.choice([-1, 1], size = number_of_dimensions, p = [0.5, 0.5])
             
             case _:
-                return np.random.choice([True, False], size = number_of_dimensions, p = [0.5, 0.5])
+                return np.random.choice([1, 0], size = number_of_dimensions, p = [0.5, 0.5])
 
 def hamming_distance(hypervector_u:np.array, hypervector_v:np.array) -> np.double:
     if np.shape(hypervector_u) != np.shape(hypervector_v):
@@ -137,7 +137,7 @@ def multibundle(hypermatrix: np.array, vsa:np.str_) -> np.array:
 
         else:
             match vsa:
-                case 'BSC', _:
+                case 'BSC':
                     number_of_rows, number_of_columns   = np.shape(hypermatrix)
                     number_of_dimensions                = number_of_columns
                     tie_breaking_hypervector            = random_hypervector(number_of_dimensions, vsa)
@@ -163,13 +163,26 @@ def multibundle(hypermatrix: np.array, vsa:np.str_) -> np.array:
 
                     else:
                         return np.sign(np.sum(hypermatrix, axis = 0))
+                    
+                case _:
+                    number_of_rows, number_of_columns   = np.shape(hypermatrix)
+                    number_of_dimensions                = number_of_columns
+                    tie_breaking_hypervector            = random_hypervector(number_of_dimensions, vsa)
+
+                    number_of_true  = np.sum(hypermatrix, axis = 0)
+                    number_of_false = np.subtract(number_of_rows, number_of_true)
+
+                    bundle_hypervector = bundle_hypervector = np.where(number_of_true > number_of_false, True,
+                                                np.where(number_of_true < number_of_false, False, tie_breaking_hypervector))
+
+                    return bundle_hypervector
 
 def permute(hypervector:np.array, shift_amount:np.int_) -> np.array:
     return np.roll(hypervector, shift_amount)
 
 def flip(hypervector_u:np.array, number_of_positions:np.uint) -> np.array:
     #number_of_dimensions = hypervector_u.size
-    number_of_dimensions = np.shape(hypervector_u)
+    number_of_dimensions = np.shape(hypervector_u)[0]
 
     flip_hypervector    = np.empty(number_of_dimensions, np.bool_)
     flip_positions      = np.random.choice(number_of_dimensions, size = number_of_positions, replace = False)
@@ -189,7 +202,7 @@ def get_level_hypermatrix(number_of_levels:np.uint, number_of_dimensions:np.uint
     number_of_flip_positions    = int(np.ceil((number_of_dimensions / (number_of_levels - 1))))
     level_hypermatrix           = np.empty((number_of_rows, number_of_columns), np.bool_)
     
-    level_hypermatrix[0]        = random_hypervector(number_of_dimensions)
+    level_hypermatrix[0]        = random_hypervector(number_of_dimensions, 'BSC')
 
     for level_index in range(1, number_of_levels):
         level_hypermatrix[level_index] = flip(level_hypermatrix[level_index - 1], number_of_flip_positions)
@@ -203,7 +216,7 @@ def get_position_hypermatrix(number_of_positions:np.uint, number_of_dimensions:n
     position_hypermatrix    = np.empty((number_of_rows, number_of_columns), np.bool_)
 
     for position_index in range(number_of_positions):
-        position_hypermatrix[position_index] = random_hypervector(number_of_dimensions)
+        position_hypermatrix[position_index] = random_hypervector(number_of_dimensions, 'BSC')
 
     return position_hypermatrix
 
@@ -227,9 +240,9 @@ def encode_analog(feature_vector:np.array, quantization_range:np.array, level_hy
         feature                             = feature_vector[feature_index]
         position_hypervector                = position_hypermatrix[feature_index]
         level_hypervector                   = get_level_hypervector(feature, quantization_range, level_hypermatrix)
-        bind_hypermatrix[feature_index]     = bind(position_hypervector, level_hypervector)
+        bind_hypermatrix[feature_index]     = bind(position_hypervector, level_hypervector, 'BSC')
 
-    return multibundle(bind_hypermatrix)
+    return multibundle(bind_hypermatrix, 'BSC')
 
 # Find the class hypervector matching the
 # minimum distance with a query vector.
@@ -262,5 +275,7 @@ def retrain_analog(
         # Caution: We assume training labels start from zero!
         if predicted_class != actual_class:
             # We binarize via a unit-step function.
-            associative_memory[predicted_class] = np.heaviside(np.subtract(associative_memory[predicted_class], query_hypervector), 0)
-            associative_memory[actual_class]    = np.heaviside(np.add(associative_memory[actual_class], query_hypervector), 0)
+            associative_memory[predicted_class] = np.subtract(associative_memory[predicted_class], query_hypervector)
+            associative_memory[actual_class]    = np.add(associative_memory[actual_class], query_hypervector)
+
+    np.heaviside(associative_memory, 0)
