@@ -60,7 +60,6 @@ def random_hypervector(number_of_dimensions:np.uint, vsa:np.str_) -> np.array:
             case _:
                 return np.random.choice([True, False], size = number_of_dimensions, p = [0.5, 0.5])
 
-# ToDo: Add check for different distances.
 def hamming_distance(hypervector_u:np.array, hypervector_v:np.array) -> np.double:
     if np.shape(hypervector_u) != np.shape(hypervector_v):
         raise ValueError(f'Shapes do not match: {np.shape(hypervector_u)} != {np.shape(hypervector_v)}')
@@ -102,7 +101,6 @@ def bind(hypervector_u:np.array, hypervector_v:np.array, vsa:np.str_) -> np.arra
                 case _:
                     return np.multiply(hypervector_u, hypervector_v, dtype = np.int_)
 
-# ToDo: Add check for different dimensionalities.
 def bundle(hypervector_u:np.array, hypervector_v:np.array, vsa:np.str_) -> np.array:
     if np.shape(hypervector_u) != np.shape(hypervector_v):
         raise ValueError(f'Shapes do not match: {np.shape(hypervector_u)} != {np.shape(hypervector_v)}')
@@ -127,7 +125,6 @@ def bundle(hypervector_u:np.array, hypervector_v:np.array, vsa:np.str_) -> np.ar
 
                     return np.sign(np.add(hypervector_u, hypervector_v, hypervector_w))
 
-# Alternative version.
 def multibundle(hypermatrix: np.array, vsa:np.str_) -> np.array:
     if np.shape(hypermatrix)[0] < 2:
         raise ValueError(f'Expected at least two hypervectors, found {np.shape(hypermatrix)[0]}')
@@ -167,13 +164,12 @@ def multibundle(hypermatrix: np.array, vsa:np.str_) -> np.array:
                     else:
                         return np.sign(np.sum(hypermatrix, axis = 0))
 
-# ToDo: Check if a negative shift amount makes sense
-# in the context of HDC.
 def permute(hypervector:np.array, shift_amount:np.int_) -> np.array:
     return np.roll(hypervector, shift_amount)
 
 def flip(hypervector_u:np.array, number_of_positions:np.uint) -> np.array:
-    number_of_dimensions = hypervector_u.size
+    #number_of_dimensions = hypervector_u.size
+    number_of_dimensions = np.shape(hypervector_u)
 
     flip_hypervector    = np.empty(number_of_dimensions, np.bool_)
     flip_positions      = np.random.choice(number_of_dimensions, size = number_of_positions, replace = False)
