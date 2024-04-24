@@ -215,7 +215,8 @@ def get_level_hypervector(feature:np.double, quantization_range:np.array, level_
     index = np.digitize(feature, quantization_range, True)
     return level_hypermatrix[index]
 
-def encode(feature_vector:np.array, quantization_range:np.array, level_hypermatrix:np.array, position_hypermatrix:np.array) -> np.array:
+# Renamed 'encode' to 'encode_analog'
+def encode_analog(feature_vector:np.array, quantization_range:np.array, level_hypermatrix:np.array, position_hypermatrix:np.array) -> np.array:
     number_of_rows, number_of_columns   = np.shape(position_hypermatrix)
     # ToDo: Add a check for number_of_features != number_of_rows
     number_of_features                  = number_of_rows
@@ -241,3 +242,25 @@ def classify(associative_memory:np.array, query_hypervector:np.array):
 
     # (class, similarity)
     return np.argmin(similarity_vector) # + 1
+
+# Retrains the model by adding and subtracting hypervectors.
+def retrain_analog(
+    associative_memory:np.array,
+    training_data:np.array,
+    training_labels:np.array,
+    quantization_range:np.array,
+    level_hypermatrix:np.array,
+    position_hypermatrix:np.array
+):
+    number_of_queries = np.shape(training_data)[0]
+
+    for index in range(number_of_queries):
+        query_hypervector   = encode_analog(training_data[index][:], quantization_range, level_hypermatrix, position_hypermatrix)
+        predicted_class     = classify(associative_memory, query_hypervector)
+        actual_class        = training_labels[index]
+
+        # Caution: We assume training labels start from zero!
+        if predicted_class != actual_class:
+            # We binarize via a unit-step function.
+            associative_memory[predicted_class] = np.heaviside(np.subtract(associative_memory[predicted_class], query_hypervector), 0)
+            associative_memory[actual_class]    = np.heaviside(np.add(associative_memory[actual_class], query_hypervector), 0)
