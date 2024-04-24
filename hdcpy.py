@@ -42,9 +42,23 @@ def fetch_dataset(dataset_name: str, save_directory:str, test_proportion:float):
         return training_features, testing_features, training_labels - 1, testing_labels - 1
 
 
-# ToDo: Generalize for other VSA's.
-def random_hypervector(number_of_dimensions:np.uint) -> np.array:
-    return np.random.choice([True, False], size = number_of_dimensions, p = [0.5, 0.5])
+# Returns a random hypervector with a BSC or MAP Vector-Symbolic Architecture scheme.
+def random_hypervector(number_of_dimensions:np.uint, vsa:np.str_) -> np.array:
+    supported_vsas = ['BSC', 'MAP']
+
+    if vsa not in supported_vsas:
+        raise ValueError(f'Invalid VSA: Expected one of the following: {supported_vsas}')
+
+    else:
+        match vsa:
+            case 'BSC':
+                return np.random.choice([True, False], size = number_of_dimensions, p = [0.5, 0.5])
+            
+            case 'MAP':
+                return np.random.choice([-1, 1], size = number_of_dimensions, p = [0.5, 0.5])
+            
+            case _:
+                return np.random.choice([True, False], size = number_of_dimensions, p = [0.5, 0.5])
 
 # ToDo: Add check for different distances.
 def hamming_distance(hypervector_u:np.array, hypervector_v:np.array) -> np.double:
@@ -52,29 +66,91 @@ def hamming_distance(hypervector_u:np.array, hypervector_v:np.array) -> np.doubl
 
     return np.count_nonzero(np.logical_xor(hypervector_u, hypervector_v, dtype = np.bool_)) / number_of_dimensions
 
-def bind(hypervector_u:np.array, hypervector_v:np.array) -> np.array:
-    return np.logical_xor(hypervector_u, hypervector_v, dtype = np.bool_)
+def cosine_similarity(hypervector_u:np.array, hypervector_v:np.array) -> np.double:
+    dot_product = np.dot(hypervector_u, hypervector_v)
+    magnitude_u = np.linalg.norm(hypervector_u)
+    magnitude_v = np.linalg.norm(hypervector_v)
+
+    return dot_product / (magnitude_u * magnitude_v)
+
+def bind(hypervector_u:np.array, hypervector_v:np.array, vsa:np.str_) -> np.array:
+    supported_vsas = ['BSC', 'MAP']
+
+    if vsa not in supported_vsas:
+        raise ValueError(f'Invalid VSA: Expected one of the following: {supported_vsas}')
+
+    else:
+        match vsa:
+            case 'BSC':
+                return np.logical_xor(hypervector_u, hypervector_v, dtype = np.bool_)
+            
+            case 'MAP':
+                return np.multiply(hypervector_u, hypervector_v, dtype = np.int_)
+            
+            case _:
+                return np.multiply(hypervector_u, hypervector_v, dtype = np.int_)
 
 # ToDo: Add check for different dimensionalities.
-def bundle(hypervector_u:np.array, hypervector_v:np.array) -> np.array:
-    number_of_dimensions    = hypervector_u.size
-    hypervector_w           = random_hypervector(number_of_dimensions)
+def bundle(hypervector_u:np.array, hypervector_v:np.array, vsa:np.str_) -> np.array:
+    supported_vsas = ['BSC', 'MAP']
 
-    return np.logical_or(np.logical_and(hypervector_w, np.logical_xor(hypervector_u, hypervector_v, dtype = np.bool_), dtype = np.bool_), np.logical_and(hypervector_u, hypervector_v, dtype = np.bool_), dtype = np.bool_)
+    if vsa not in supported_vsas:
+        raise ValueError(f'Invalid VSA: Expected one of the following: {supported_vsas}')
+
+    else:
+        match vsa:
+            case 'BSC', _:
+                number_of_dimensions    = hypervector_u.size
+                hypervector_w           = random_hypervector(number_of_dimensions, vsa)
+
+                return np.logical_or(np.logical_and(hypervector_w, np.logical_xor(hypervector_u, hypervector_v, dtype = np.bool_), dtype = np.bool_), np.logical_and(hypervector_u, hypervector_v, dtype = np.bool_), dtype = np.bool_)
+            
+            case 'MAP':
+                number_of_dimensions    = hypervector_u.size
+                hypervector_w           = random_hypervector(number_of_dimensions, vsa)
+
+                return np.sign(np.add(hypervector_u, hypervector_v, hypervector_w))
 
 # Alternative version.
-def multibundle(hypermatrix: np.array) -> np.array:
-    number_of_rows, number_of_columns   = np.shape(hypermatrix)
-    number_of_dimensions                = number_of_columns
-    tie_breaking_hypervector            = random_hypervector(number_of_dimensions)
+def multibundle(hypermatrix: np.array, vsa:np.str_) -> np.array:
+    supported_vsas = ['BSC', 'MAP']
 
-    number_of_true  = np.sum(hypermatrix, axis = 0)
-    number_of_false = np.subtract(number_of_rows, number_of_true)
+    if vsa not in supported_vsas:
+        raise ValueError(f'Invalid VSA: Expected one of the following: {supported_vsas}')
 
-    bundle_hypervector = bundle_hypervector = np.where(number_of_true > number_of_false, True,
-                                   np.where(number_of_true < number_of_false, False, tie_breaking_hypervector))
+    else:
+        match vsa:
+            case 'BSC', _:
+                number_of_rows, number_of_columns   = np.shape(hypermatrix)
+                number_of_dimensions                = number_of_columns
+                tie_breaking_hypervector            = random_hypervector(number_of_dimensions, vsa)
 
-    return bundle_hypervector
+                number_of_true  = np.sum(hypermatrix, axis = 0)
+                number_of_false = np.subtract(number_of_rows, number_of_true)
+
+                bundle_hypervector = bundle_hypervector = np.where(number_of_true > number_of_false, True,
+                                            np.where(number_of_true < number_of_false, False, tie_breaking_hypervector))
+
+                return bundle_hypervector
+            
+            case 'MAP':
+                number_of_rows, number_of_columns   = np.shape(hypermatrix)
+                number_of_dimensions                = number_of_columns
+                
+                # If dealing with an even number of hypervectors,
+                # yield a tie-breaking hypervector.
+                if number_of_rows % 2 == 0:
+                    tie_breaking_hypervector = random_hypervector(number_of_dimensions, vsa)
+
+                    return np.sign(np.sum(np.vstack((hypermatrix, tie_breaking_hypervector)), axis = 0))
+
+                else:
+                    return np.sign(np.sum(hypermatrix, axis = 0))
+
+# ToDo: Check if a negative shift amount makes sense
+# in the context of HDC.
+def permute(hypervector:np.array, shift_amount:np.int_) -> np.array:
+    return np.roll(hypervector, shift_amount)
 
 def flip(hypervector_u:np.array, number_of_positions:np.uint) -> np.array:
     number_of_dimensions = hypervector_u.size
