@@ -67,7 +67,7 @@ def hamming_distance(hypervector_u:np.array, hypervector_v:np.array) -> np.doubl
     else:
         number_of_dimensions = np.shape(hypervector_u)[0]
 
-        return np.count_nonzero(np.logical_xor(hypervector_u, hypervector_v, dtype = np.uint)) / number_of_dimensions
+        return np.count_nonzero(np.logical_xor(hypervector_u, hypervector_v)) / number_of_dimensions
 
 def cosine_similarity(hypervector_u:np.array, hypervector_v:np.array) -> np.double:
     if np.shape(hypervector_u) != np.shape(hypervector_v):
@@ -93,7 +93,7 @@ def bind(hypervector_u:np.array, hypervector_v:np.array, vsa:np.str_) -> np.arra
         else:
             match vsa:
                 case 'BSC':
-                    return np.logical_xor(hypervector_u, hypervector_v, dtype = np.uint)
+                    return np.logical_xor(hypervector_u, hypervector_v)
                 
                 case 'MAP':
                     return np.multiply(hypervector_u, hypervector_v, dtype = np.int_)

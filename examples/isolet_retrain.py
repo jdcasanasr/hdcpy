@@ -26,7 +26,7 @@ if __name__ == "__main__":
     position_hypermatrix    = get_position_hypermatrix(number_of_features, number_of_dimensions)
     quantization_range      = get_quantization_range(signal_minimum_level, signal_maximum_level, number_of_quantization_levels)
 
-    associative_memory      = np.empty((number_of_classes, number_of_dimensions), np.bool_)
+    associative_memory      = np.empty((number_of_classes, number_of_dimensions), np.uint)
 
     # Testing preparation.
     number_of_correct_predictions = 0
@@ -42,7 +42,7 @@ if __name__ == "__main__":
 
     # Train the model in class order (1, 2, 3, ...).
     for class_index in range(number_of_classes):
-        prototype_hypermatrix       = np.empty(number_of_dimensions, dtype = np.bool_)
+        prototype_hypermatrix       = np.empty(number_of_dimensions, dtype = np.uint)
         training_labels_iterator    = np.nditer(training_labels, flags = ['c_index'])
 
         for label in training_labels_iterator:
