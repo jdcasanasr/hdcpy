@@ -80,3 +80,38 @@ def bundle(u:np.array, v:np.array, vsa:np.str_) -> np.array:
         
 def permute(u:np.array, shift_amount:np.int_) -> np.array:
     return np.roll(u, shift_amount)
+
+def multibundle(hypermatrix:np.array, vsa:np.str_) -> np.array:
+    number_of_hypervectors  = np.shape(hypermatrix)[0]
+    dimensionality          = np.shape(hypermatrix)[1]
+
+    if number_of_hypervectors < 2:
+        raise ValueError(f'Expected at least two hypervectors.')
+
+    if vsa not in supported_vsas:
+        raise ValueError(f'{vsa} is not a supported VSA.')
+
+    match vsa:
+        case 'BSC':
+            if number_of_hypervectors % 2 == 0:
+                tie_break = random_hypervector(dimensionality, vsa)
+
+                return np.where(np.sum(np.vstack((hypermatrix, tie_break)), axis = 0) > 0, 1, 0)
+
+            else:
+                return np.where(np.sum(hypermatrix, axis = 0) > 0, 1, 0)
+                
+        
+        case 'MAP':
+            if number_of_hypervectors % 2 == 0:
+                tie_break = random_hypervector(dimensionality, vsa)
+
+                return np.sign(np.sum(np.vstack((hypermatrix, tie_break)), axis = 0))
+
+            else:
+                return np.sign(np.sum(hypermatrix, axis = 0))
+            
+        case _:
+            print('Warning: Returning a non-VSA hypervector.')
+
+            return np.empty(dimensionality)
