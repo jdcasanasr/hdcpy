@@ -66,7 +66,7 @@ def bundle(u:np.array, v:np.array, vsa:np.str_) -> np.array:
         case 'BSC':
             w = random_hypervector(dimensionality_u, vsa)
 
-            return np.where(np.add(u, v, w) > 0, 1, 0)
+            return np.where(np.add(u, v, w) >= 2, 1, 0)
         
         case 'MAP':
             w = random_hypervector(dimensionality_u, vsa)
@@ -96,10 +96,10 @@ def multibundle(hypermatrix:np.array, vsa:np.str_) -> np.array:
             if number_of_hypervectors % 2 == 0:
                 tie_break = random_hypervector(dimensionality, vsa)
 
-                return np.where(np.sum(np.vstack((hypermatrix, tie_break)), axis = 0) > 0, 1, 0)
+                return np.where(np.sum(np.vstack((hypermatrix, tie_break)), axis = 0) >= (number_of_hypervectors / 2), 1, 0)
 
             else:
-                return np.where(np.sum(hypermatrix, axis = 0) > 0, 1, 0)
+                return np.where(np.sum(hypermatrix, axis = 0) >= np.uint(np.ceil((number_of_hypervectors / 2))), 1, 0)
                 
         
         case 'MAP':
