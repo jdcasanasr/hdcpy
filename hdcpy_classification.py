@@ -46,3 +46,28 @@ def encode_signal(bin_vector:np.array, level_item_memory:np.array, id_item_memor
         bind_hypermatrix[index] = bind(get_id_hypervector(index, id_item_memory), get_level_hypervector(bin_vector[index], level_item_memory), vsa)
 
     return multibundle(bind_hypermatrix, vsa)
+
+def classify(query_hypervector:np.array, associative_memory:np.array, vsa:np.str_) -> np.uint:
+    if vsa not in supported_vsas:
+        raise ValueError(f'{vsa} is not a supported VSA.')
+
+    number_of_classes = np.shape(associative_memory)[0]
+    similarity_vector = np.empty(number_of_classes, np.double)
+
+    match vsa:
+        case 'BSC':
+            for index in range(number_of_classes):
+                similarity_vector[index] = hamming_distance(associative_memory[index], query_hypervector)
+
+            return np.argmin(similarity_vector)
+
+        case 'MAP':
+            for index in range(number_of_classes):
+                similarity_vector[index] = cosine_similarity(associative_memory[index], query_hypervector)
+
+            return np.argmax(similarity_vector)
+        
+        case _:
+            print('Warning: Returning a meaningless value.')
+
+            return -1
