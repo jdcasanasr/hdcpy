@@ -25,3 +25,24 @@ def get_id_hypermatrix(number_of_ids:np.uint, dimensionality:np.uint, vsa:np.str
         id_hypermatrix[index] = random_hypervector(dimensionality, vsa)
 
     return id_hypermatrix
+
+def get_level_hypervector(feature:np.double, level_item_memory:np.array) -> np.array:
+    quantization_range = np.linspace(-1, 1, np.shape(level_item_memory)[0])
+
+    return level_item_memory[np.digitize(feature, quantization_range, True)]
+
+def get_id_hypervector(id:np.uint, id_item_memory:np.array) -> np.array:
+    return id_item_memory[id]
+
+def encode_signal(bin_vector:np.array, level_item_memory:np.array, id_item_memory:np.array, vsa:np.str_) -> np.array:
+    number_of_bins      = np.shape(bin_vector)[0]
+
+    if number_of_bins != id_item_memory[0]:
+        raise ValueError(f'Number of bins ({number_of_bins}) and number of IDs ({np.shape(id_item_memory[0])}) do not match.')
+
+    bind_hypermatrix    = np.empty(np.shape(id_item_memory), np.uint)
+
+    for index in range(number_of_bins):
+        bind_hypermatrix[index] = bind(get_id_hypervector(index, id_item_memory), get_level_hypervector(bin_vector(index), level_item_memory), vsa)
+
+    return multibundle(bind_hypermatrix, vsa)
