@@ -1,8 +1,8 @@
 import numpy as np
 
-def random_hypervector(dimensionality:np.uint, vsa:np.str_) -> np.array:
-    supported_vsas = ['BSC', 'MAP']
+supported_vsas = ['BSC', 'MAP']
 
+def random_hypervector(dimensionality:np.uint, vsa:np.str_) -> np.array:
     if vsa not in supported_vsas:
         raise ValueError(f'{vsa} is not a supported VSA.')
 
@@ -36,8 +36,6 @@ def cosine_similarity(u:np.array, v:np.array) -> np.double:
 def bind(u:np.array, v:np.array, vsa:np.str_) -> np.array:
     if np.shape(u)[0] != np.shape(v)[0]:
         raise ValueError(f'Hypervectors must have the same dimensions.')
-    
-    supported_vsas = ['BSC', 'MAP']
 
     if vsa not in supported_vsas:
         raise ValueError(f'{vsa} is not a supported VSA.')
@@ -53,34 +51,32 @@ def bind(u:np.array, v:np.array, vsa:np.str_) -> np.array:
             print('Warning: Returning a non-VSA hypervector.')
 
             return np.empty(np.shape(u)[0])
+     
+def bundle(u:np.array, v:np.array, vsa:np.str_) -> np.array:
+    dimensionality_u = np.shape(u)[0]
+    dimensionality_v = np.shape(v)[0]
 
-# HERE!        
-def bundle(hypervector_u:np.array, hypervector_v:np.array, vsa:np.str_) -> np.array:
-    if np.shape(hypervector_u) != np.shape(hypervector_v):
-        raise ValueError(f'Shapes do not match: {np.shape(hypervector_u)} != {np.shape(hypervector_v)}')
+    if dimensionality_u != dimensionality_v:
+        raise ValueError(f'Hypervectors must have the same dimensions.')
 
-    else:
-        supported_vsas = ['BSC', 'MAP']
+    if vsa not in supported_vsas:
+        raise ValueError(f'{vsa} is not a supported VSA.')
 
-        if vsa not in supported_vsas:
-            raise ValueError(f'Invalid VSA: Expected one of the following: {supported_vsas}')
+    match vsa:
+        case 'BSC':
+            w = random_hypervector(dimensionality_u, vsa)
 
-        else:
-            match vsa:
-                case 'BSC':
-                    number_of_dimensions    = np.shape(hypervector_u)[0]
-                    hypervector_w           = random_hypervector(number_of_dimensions, vsa)
+            return np.where(np.add(u, v, w) > 0, 1, 0)
+        
+        case 'MAP':
+            w = random_hypervector(dimensionality_u, vsa)
 
-                    return np.logical_or(np.logical_and(hypervector_w, np.logical_xor(hypervector_u, hypervector_v, dtype = np.uint), dtype = np.uint), np.logical_and(hypervector_u, hypervector_v, dtype = np.uint), dtype = np.uint)
-                
-                case 'MAP':
-                    number_of_dimensions    = hypervector_u.size
-                    hypervector_w           = random_hypervector(number_of_dimensions, vsa)
+            return np.sign(np.add(u, v, w))
+        
+        case _:
+            print('Warning: Returning a non-VSA hypervector.')
 
-                    return np.sign(np.add(hypervector_u, hypervector_v, hypervector_w))
-                
-                case _:
-                    number_of_dimensions    = np.shape(hypervector_u)[0]
-                    hypervector_w           = random_hypervector(number_of_dimensions, vsa)
-
-                    return np.logical_or(np.logical_and(hypervector_w, np.logical_xor(hypervector_u, hypervector_v, dtype = np.uint), dtype = np.uint), np.logical_and(hypervector_u, hypervector_v, dtype = np.uint), dtype = np.uint)
+            return np.empty(dimensionality_u)
+        
+def permute(u:np.array, shift_amount:np.int_) -> np.array:
+    return np.roll(u, shift_amount)
