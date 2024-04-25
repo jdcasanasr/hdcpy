@@ -65,9 +65,9 @@ def hamming_distance(hypervector_u:np.array, hypervector_v:np.array) -> np.doubl
         raise ValueError(f'Shapes do not match: {np.shape(hypervector_u)} != {np.shape(hypervector_v)}')
 
     else:
-        number_of_dimensions = hypervector_u.size
+        number_of_dimensions = np.shape(hypervector_u)[0]
 
-        return np.count_nonzero(np.logical_xor(hypervector_u, hypervector_v, dtype = np.bool_)) / number_of_dimensions
+        return np.count_nonzero(np.logical_xor(hypervector_u, hypervector_v, dtype = np.uint)) / number_of_dimensions
 
 def cosine_similarity(hypervector_u:np.array, hypervector_v:np.array) -> np.double:
     if np.shape(hypervector_u) != np.shape(hypervector_v):
@@ -93,13 +93,13 @@ def bind(hypervector_u:np.array, hypervector_v:np.array, vsa:np.str_) -> np.arra
         else:
             match vsa:
                 case 'BSC':
-                    return np.logical_xor(hypervector_u, hypervector_v, dtype = np.bool_)
+                    return np.logical_xor(hypervector_u, hypervector_v, dtype = np.uint)
                 
                 case 'MAP':
                     return np.multiply(hypervector_u, hypervector_v, dtype = np.int_)
                 
                 case _:
-                    return np.multiply(hypervector_u, hypervector_v, dtype = np.int_)
+                    return np.multiply(hypervector_u, hypervector_v, dtype = np.uint)
 
 def bundle(hypervector_u:np.array, hypervector_v:np.array, vsa:np.str_) -> np.array:
     if np.shape(hypervector_u) != np.shape(hypervector_v):
@@ -113,17 +113,23 @@ def bundle(hypervector_u:np.array, hypervector_v:np.array, vsa:np.str_) -> np.ar
 
         else:
             match vsa:
-                case 'BSC', _:
-                    number_of_dimensions    = hypervector_u.size
+                case 'BSC':
+                    number_of_dimensions    = np.shape(hypervector_u)[0]
                     hypervector_w           = random_hypervector(number_of_dimensions, vsa)
 
-                    return np.logical_or(np.logical_and(hypervector_w, np.logical_xor(hypervector_u, hypervector_v, dtype = np.bool_), dtype = np.bool_), np.logical_and(hypervector_u, hypervector_v, dtype = np.bool_), dtype = np.bool_)
+                    return np.logical_or(np.logical_and(hypervector_w, np.logical_xor(hypervector_u, hypervector_v, dtype = np.uint), dtype = np.uint), np.logical_and(hypervector_u, hypervector_v, dtype = np.uint), dtype = np.uint)
                 
                 case 'MAP':
                     number_of_dimensions    = hypervector_u.size
                     hypervector_w           = random_hypervector(number_of_dimensions, vsa)
 
                     return np.sign(np.add(hypervector_u, hypervector_v, hypervector_w))
+                
+                case _:
+                    number_of_dimensions    = np.shape(hypervector_u)[0]
+                    hypervector_w           = random_hypervector(number_of_dimensions, vsa)
+
+                    return np.logical_or(np.logical_and(hypervector_w, np.logical_xor(hypervector_u, hypervector_v, dtype = np.uint), dtype = np.uint), np.logical_and(hypervector_u, hypervector_v, dtype = np.uint), dtype = np.uint)
 
 def multibundle(hypermatrix: np.array, vsa:np.str_) -> np.array:
     if np.shape(hypermatrix)[0] < 2:
@@ -145,8 +151,8 @@ def multibundle(hypermatrix: np.array, vsa:np.str_) -> np.array:
                     number_of_true  = np.sum(hypermatrix, axis = 0)
                     number_of_false = np.subtract(number_of_rows, number_of_true)
 
-                    bundle_hypervector = bundle_hypervector = np.where(number_of_true > number_of_false, True,
-                                                np.where(number_of_true < number_of_false, False, tie_breaking_hypervector))
+                    bundle_hypervector = bundle_hypervector = np.where(number_of_true > number_of_false, 1,
+                                                np.where(number_of_true < number_of_false, 0, tie_breaking_hypervector))
 
                     return bundle_hypervector
                 
@@ -172,8 +178,8 @@ def multibundle(hypermatrix: np.array, vsa:np.str_) -> np.array:
                     number_of_true  = np.sum(hypermatrix, axis = 0)
                     number_of_false = np.subtract(number_of_rows, number_of_true)
 
-                    bundle_hypervector = bundle_hypervector = np.where(number_of_true > number_of_false, True,
-                                                np.where(number_of_true < number_of_false, False, tie_breaking_hypervector))
+                    bundle_hypervector = bundle_hypervector = np.where(number_of_true > number_of_false, 1,
+                                                np.where(number_of_true < number_of_false, 0, tie_breaking_hypervector))
 
                     return bundle_hypervector
 
@@ -181,10 +187,9 @@ def permute(hypervector:np.array, shift_amount:np.int_) -> np.array:
     return np.roll(hypervector, shift_amount)
 
 def flip(hypervector_u:np.array, number_of_positions:np.uint) -> np.array:
-    #number_of_dimensions = hypervector_u.size
     number_of_dimensions = np.shape(hypervector_u)[0]
 
-    flip_hypervector    = np.empty(number_of_dimensions, np.bool_)
+    flip_hypervector    = np.empty(number_of_dimensions, np.uint)
     flip_positions      = np.random.choice(number_of_dimensions, size = number_of_positions, replace = False)
 
     for element_index in range(number_of_dimensions):
@@ -200,7 +205,7 @@ def get_level_hypermatrix(number_of_levels:np.uint, number_of_dimensions:np.uint
     number_of_rows              = number_of_levels
     number_of_columns           = number_of_dimensions
     number_of_flip_positions    = int(np.ceil((number_of_dimensions / (number_of_levels - 1))))
-    level_hypermatrix           = np.empty((number_of_rows, number_of_columns), np.bool_)
+    level_hypermatrix           = np.empty((number_of_rows, number_of_columns), np.uint)
     
     level_hypermatrix[0]        = random_hypervector(number_of_dimensions, 'BSC')
 
@@ -213,7 +218,7 @@ def get_position_hypermatrix(number_of_positions:np.uint, number_of_dimensions:n
     number_of_rows          = number_of_positions
     number_of_columns       = number_of_dimensions
     
-    position_hypermatrix    = np.empty((number_of_rows, number_of_columns), np.bool_)
+    position_hypermatrix    = np.empty((number_of_rows, number_of_columns), np.uint)
 
     for position_index in range(number_of_positions):
         position_hypermatrix[position_index] = random_hypervector(number_of_dimensions, 'BSC')
@@ -234,7 +239,7 @@ def encode_analog(feature_vector:np.array, quantization_range:np.array, level_hy
     # ToDo: Add a check for number_of_features != number_of_rows
     number_of_features                  = number_of_rows
     # Hypermatrix for 'level_hypervector BIND position_hypervector'
-    bind_hypermatrix                    = np.empty((number_of_rows, number_of_columns), np.bool_)
+    bind_hypermatrix                    = np.empty((number_of_rows, number_of_columns), np.uint)
 
     for feature_index in range(number_of_features):
         feature                             = feature_vector[feature_index]
