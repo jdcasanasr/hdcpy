@@ -1,5 +1,10 @@
-import numpy as np
-from hdcpy_v2 import *
+import numpy    as np
+import pandas   as pd
+import os
+
+from hdcpy_v2                   import *
+from sklearn.datasets           import fetch_openml
+from sklearn.model_selection    import train_test_split
 
 def flip(u:np.array, number_of_positions:np.uint, vsa:np.str_) -> np.array:
     if vsa not in supported_vsas:
@@ -34,3 +39,23 @@ def flip(u:np.array, number_of_positions:np.uint, vsa:np.str_) -> np.array:
             print('Warning: Returning a non-VSA hypervector.')
 
             return np.empty(dimensionality)
+        
+def get_dataset(dataset_name: str, save_directory:str, test_proportion:float):
+    if not os.path.exists(save_directory):
+        os.makedirs(save_directory)
+
+    file_path = os.path.join(save_directory, f'{dataset_name}.csv')
+
+    if not os.path.exists(file_path):
+        dataset = fetch_openml(name = dataset_name, version = 1, parser = 'auto')
+
+        np.savetxt(file_path, np.column_stack((dataset.data, dataset.target)), delimiter = ',', fmt = '%s')
+
+        return train_test_split(data, target, test_size=test_proportion)
+
+    else:
+        dataset_array   = np.genfromtxt(file_path, delimiter = ',')
+        data            = dataset_array[:, :-1]
+        target          = dataset_array[:, -1]
+
+        return train_test_split(data, target, test_size = test_proportion)
