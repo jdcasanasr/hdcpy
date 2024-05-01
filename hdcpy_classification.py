@@ -71,3 +71,26 @@ def classify(query_hypervector:np.array, associative_memory:np.array, vsa:np.str
             print('Warning: Returning a meaningless value.')
 
             return -1
+        
+def retrain_analog(
+    associative_memory:np.array,
+    training_data:np.array,
+    training_labels:np.array,
+    quantization_range:np.array,
+    level_hypermatrix:np.array,
+    position_hypermatrix:np.array
+):
+    number_of_queries = np.shape(training_data)[0]
+
+    for index in range(number_of_queries):
+        query_hypervector   = encode_analog(training_data[index][:], quantization_range, level_hypermatrix, position_hypermatrix)
+        predicted_class     = classify(associative_memory, query_hypervector)
+        actual_class        = training_labels[index]
+
+        # Caution: We assume training labels start from zero!
+        if predicted_class != actual_class:
+            # We binarize via a unit-step function.
+            associative_memory[predicted_class] = np.subtract(associative_memory[predicted_class], query_hypervector)
+            associative_memory[actual_class]    = np.add(associative_memory[actual_class], query_hypervector)
+
+    np.heaviside(associative_memory, 0)
