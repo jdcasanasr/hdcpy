@@ -1,5 +1,4 @@
 import numpy    as np
-import pandas   as pd
 import os
 
 from hdcpy_v2                   import *
@@ -47,15 +46,18 @@ def get_dataset(dataset_name: str, save_directory:str, test_proportion:float):
     file_path = os.path.join(save_directory, f'{dataset_name}.csv')
 
     if not os.path.exists(file_path):
-        dataset = fetch_openml(name = dataset_name, version = 1, parser = 'auto')
+        dataset         = fetch_openml(name = dataset_name, version = 1, parser = 'auto')
+        data            = np.array(dataset.data)
+        target          = np.array(dataset.target)
+        dataset_array   = np.column_stack((data, target))
 
-        np.savetxt(file_path, np.column_stack((dataset.data, dataset.target)), delimiter = ',', fmt = '%s')
+        np.savetxt(file_path, dataset_array, delimiter = ',', fmt = '%s')
 
-        return train_test_split(data, target, test_size=test_proportion)
+        return train_test_split(data, target, test_size = test_proportion)
 
     else:
-        dataset_array   = np.genfromtxt(file_path, delimiter = ',')
-        data            = dataset_array[:, :-1]
-        target          = dataset_array[:, -1]
+        dataset_array   = np.genfromtxt(file_path, delimiter = ',', dtype = np.str_)
+        data            = np.array(dataset_array[:, :-1])
+        target          = np.array(dataset_array[:, -1])
 
         return train_test_split(data, target, test_size = test_proportion)
