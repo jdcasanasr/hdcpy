@@ -34,7 +34,7 @@ def get_level_hypervector(feature:np.double, level_item_memory:np.array) -> np.a
 def get_id_hypervector(id:np.uint, id_item_memory:np.array) -> np.array:
     return id_item_memory[id]
 
-def encode_signal(bin_vector:np.array, level_item_memory:np.array, id_item_memory:np.array, vsa:np.str_) -> np.array:
+def encode_analog(bin_vector:np.array, level_item_memory:np.array, id_item_memory:np.array, vsa:np.str_) -> np.array:
     number_of_bins      = np.shape(bin_vector)[0]
 
     if number_of_bins != np.shape(id_item_memory)[0]:
@@ -71,26 +71,53 @@ def classify(query_hypervector:np.array, associative_memory:np.array, vsa:np.str
             print('Warning: Returning a meaningless value.')
 
             return -1
-        
+
+# Note: An 'equivalence dictionary' is required to transform
+# any label (a str-type object) into an integer number 
+# between [0, number_of_classes).
 def retrain_analog(
     associative_memory:np.array,
     training_data:np.array,
     training_labels:np.array,
-    quantization_range:np.array,
-    level_hypermatrix:np.array,
-    position_hypermatrix:np.array
+    level_item_memory:np.array,
+    id_item_memory:np.array,
+    equivalence_dictionary:dict,
+    vsa:np.str_
 ):
-    number_of_queries = np.shape(training_data)[0]
+    number_of_queries   = np.shape(training_data)[0]
+    number_of_labels    = np.shape(training_labels)[0]
+    number_of_classes   = np.shape(associative_memory)[0]
+
+    retrained_memory    = associative_memory
+
+    if number_of_queries != number_of_labels:
+        raise ValueError(f'Number of queries ({number_of_queries}) and labels ({number_of_labels}) do not match.')
 
     for index in range(number_of_queries):
-        query_hypervector   = encode_analog(training_data[index][:], quantization_range, level_hypermatrix, position_hypermatrix)
-        predicted_class     = classify(associative_memory, query_hypervector)
-        actual_class        = training_labels[index]
+        query_hypervector   = encode_analog(training_data[index][:], level_item_memory, id_item_memory, vsa)
+        predicted_class     = classify(associative_memory, query_hypervector, vsa)
+        actual_class        = equivalence_dictionary(training_labels[index])
 
         # Caution: We assume training labels start from zero!
         if predicted_class != actual_class:
-            # We binarize via a unit-step function.
-            associative_memory[predicted_class] = np.subtract(associative_memory[predicted_class], query_hypervector)
-            associative_memory[actual_class]    = np.add(associative_memory[actual_class], query_hypervector)
+            retrained_memory[predicted_class] = np.subtract(associative_memory[predicted_class], query_hypervector)
+            retrained_memory[actual_class]    = np.add(associative_memory[actual_class], query_hypervector)
 
-    np.heaviside(associative_memory, 0)
+    # Once retraining is done, re-binarize the associative memory.
+    match vsa:
+        case 'BSC':
+            for index in range(number_of_classes):
+                retrained_memory[index] = np.where(retrained_memory[index] >= 2, 1, 0)
+
+            return retrained_memory
+
+        case 'MAP':
+            for index in range(number_of_classes):
+                retrained_memory[index] = np.sign(retrained_memory[index])
+
+            return retrained_memory
+
+        case _:
+            print('Warning: Retraining not performed')
+
+            return associative_memory
