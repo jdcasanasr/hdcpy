@@ -1,4 +1,4 @@
-from hdcpy_v2 import *
+from hdcpy import *
 
 for _ in range(10):
     u       = random_hypervector(10000, 'BSC')

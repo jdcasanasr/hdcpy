@@ -1,4 +1,3 @@
-import numpy as np
 from hdcpy_auxiliary import *
 
 dataset         = 'har'

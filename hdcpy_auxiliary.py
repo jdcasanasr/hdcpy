@@ -1,7 +1,7 @@
 import numpy    as np
 import os
 
-from hdcpy_v2                   import *
+from hdcpy                      import *
 from sklearn.datasets           import fetch_openml
 from sklearn.model_selection    import train_test_split
 

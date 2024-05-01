@@ -1,4 +1,4 @@
-from hdcpy_v2 import *
+from hdcpy import *
 
 print('BSC, Even Case')
 for _ in range(10):

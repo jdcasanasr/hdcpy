@@ -1,4 +1,4 @@
-from hdcpy_v2               import *
+from hdcpy               import *
 from hdcpy_classification   import *
 from hdcpy_auxiliary        import *
 
