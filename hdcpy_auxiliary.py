@@ -45,10 +45,10 @@ def binarize(u:np.array, vsa:np.str_) -> np.array:
     
     match vsa:
         case 'BSC':
-            return np.where(u >= 2, 1, 0)
+            return np.where(u >= 1, 1, 0)
 
         case 'MAP':
-            return np.sign(u)
+            return np.where(u >= 0, 1, -1)
         
         case _:
             print('Warning: hypervector not binarized')
