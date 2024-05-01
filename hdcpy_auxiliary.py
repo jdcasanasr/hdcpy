@@ -38,7 +38,23 @@ def flip(u:np.array, number_of_positions:np.uint, vsa:np.str_) -> np.array:
             print('Warning: Returning a non-VSA hypervector.')
 
             return np.empty(dimensionality)
+
+def binarize(u:np.array, vsa:np.str_) -> np.array:
+    if vsa not in supported_vsas:
+        raise ValueError(f'{vsa} is not a supported VSA.')
+    
+    match vsa:
+        case 'BSC':
+            return np.where(u >= 2, 1, 0)
+
+        case 'MAP':
+            return np.sign(u)
         
+        case _:
+            print('Warning: hypervector not binarized')
+
+            return u
+
 def get_dataset(dataset_name: str, save_directory:str, test_proportion:float):
     if not os.path.exists(save_directory):
         os.makedirs(save_directory)
