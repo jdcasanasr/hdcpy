@@ -90,6 +90,9 @@ def retrain_analog(
 
     retrained_memory    = associative_memory
 
+    if vsa not in supported_vsas:
+        raise ValueError(f'{vsa} is not a supported VSA.')
+
     if number_of_queries != number_of_labels:
         raise ValueError(f'Number of queries ({number_of_queries}) and labels ({number_of_labels}) do not match.')
 
@@ -104,20 +107,7 @@ def retrain_analog(
             retrained_memory[actual_class]    = np.add(associative_memory[actual_class], query_hypervector)
 
     # Once retraining is done, re-binarize the associative memory.
-    match vsa:
-        case 'BSC':
-            for index in range(number_of_classes):
-                retrained_memory[index] = np.where(retrained_memory[index] >= 2, 1, 0)
+    for index in range(number_of_classes):
+                retrained_memory[index] = binarize(retrained_memory[index], vsa)
 
-            return retrained_memory
-
-        case 'MAP':
-            for index in range(number_of_classes):
-                retrained_memory[index] = np.sign(retrained_memory[index])
-
-            return retrained_memory
-
-        case _:
-            print('Warning: Retraining not performed')
-
-            return associative_memory
+    return retrained_memory
