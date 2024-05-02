@@ -69,7 +69,7 @@ test_proportion = 0.2
 training_features, testing_features, training_labels, testing_labels = get_dataset(dataset_name, save_directory, test_proportion)
 
 # 2) Define model parameters.
-vsa                     = 'MAP'
+vsa                     = 'BSC'
 number_of_dimensions    = 10000
 number_of_classes       = 26
 number_of_levels        = 10
@@ -93,10 +93,17 @@ for current_label in labels:
 
     associative_memory[equivalence_dictionary[current_label]] = multibundle(prototype_hypermatrix[1:][:], vsa)
 
-# 5) Test the model.
+# 5) Retrain the model.
+retrained_associative_memory = retrain_analog(
+    associative_memory, training_features,
+    training_labels, level_item_memory,
+    id_item_memory, equivalence_dictionary,
+    vsa)
+
+# 6) Test the model.
 for index in range(np.shape(testing_features)[0]):
     query_hypervector   = encode_analog(testing_features[index][:], level_item_memory, id_item_memory, vsa)
-    predicted_class     = classify(query_hypervector, associative_memory, vsa)
+    predicted_class     = classify(query_hypervector, retrained_associative_memory, vsa)
     actual_class        = equivalence_dictionary[testing_labels[index]]
 
     if predicted_class == actual_class:

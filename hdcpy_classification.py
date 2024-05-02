@@ -83,7 +83,7 @@ def retrain_analog(
     id_item_memory:np.array,
     equivalence_dictionary:dict,
     vsa:np.str_
-):
+) -> np.array:
     number_of_queries   = np.shape(training_data)[0]
     number_of_labels    = np.shape(training_labels)[0]
     number_of_classes   = np.shape(associative_memory)[0]
