@@ -48,7 +48,7 @@ def binarize(u:np.array, vsa:np.str_) -> np.array:
             return np.where(u >= 1, 1, 0)
 
         case 'MAP':
-            return np.where(u >= 0, 1, -1)
+            return np.where(u > 0, 1, -1)
         
         case _:
             print('Warning: hypervector not binarized')
