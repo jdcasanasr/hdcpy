@@ -78,36 +78,27 @@ number_of_ids           = np.shape(training_features)[1]
 # 3) Model preparation.
 id_item_memory          = get_id_hypermatrix(number_of_ids, number_of_dimensions, vsa)
 level_item_memory       = get_level_hypermatrix(number_of_levels, number_of_dimensions, vsa)
-associative_memory      = np.empty((number_of_classes, number_of_dimensions), np.int_)
 
-number_of_hits  = 0
-number_of_tests = np.shape(testing_features)[0]
+number_of_hits          = 0
+number_of_tests         = np.shape(testing_features)[0]
 
 # 4) Train the model.
-for current_label in labels:
-    prototype_hypermatrix = np.empty(number_of_dimensions, dtype = np.int_)
-
-    for index in range(np.shape(training_labels)[0]):
-        if training_labels[index] == current_label:
-            prototype_hypermatrix = np.vstack((prototype_hypermatrix, encode_analog(training_features[index], level_item_memory, id_item_memory, vsa)))
-
-    associative_memory[equivalence_dictionary[current_label]] = multibundle(prototype_hypermatrix[1:][:], vsa)
+associative_memory = train_analog(training_features, training_labels,
+                                  labels, equivalence_dictionary,
+                                  id_item_memory, level_item_memory,
+                                  vsa)
 
 # 5) Retrain the model.
-retrained_associative_memory = retrain_analog(
-    associative_memory, training_features,
-    training_labels, level_item_memory,
-    id_item_memory, equivalence_dictionary,
-    vsa)
+#retrained_associative_memory = retrain_analog(
+#    associative_memory, training_features,
+#    training_labels, level_item_memory,
+#    id_item_memory, equivalence_dictionary,
+#    vsa)
 
 # 6) Test the model.
-for index in range(np.shape(testing_features)[0]):
-    query_hypervector   = encode_analog(testing_features[index][:], level_item_memory, id_item_memory, vsa)
-    predicted_class     = classify(query_hypervector, retrained_associative_memory, vsa)
-    label               = testing_labels[index]
-    actual_class        = equivalence_dictionary[testing_labels[index]]
+accuracy = test_analog(testing_features, testing_labels,
+                       equivalence_dictionary, associative_memory,
+                       id_item_memory, level_item_memory,
+                       vsa)
 
-    if predicted_class == actual_class:
-        number_of_hits += 1
-
-print(f'Accuracy: {(number_of_hits / number_of_tests * 100):0.2f}')
+print(f'Accuracy: {accuracy:0.2f}')

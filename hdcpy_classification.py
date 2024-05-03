@@ -72,6 +72,52 @@ def classify(query_hypervector:np.array, associative_memory:np.array, vsa:np.str
 
             return -1
 
+def train_analog(
+    training_features:np.array,
+    training_labels:np.array,
+    label_array:np.array,
+    label_dictionary:dict,
+    id_item_memory:np.array,
+    level_item_memory:np.array,
+    vsa:np.str_
+) -> np.array:
+    dimensionality          = np.shape(id_item_memory)[1]
+    number_of_classes       = np.shape(label_array)[0]
+    associative_memory      = np.empty((number_of_classes, dimensionality), np.int_)
+
+    for current_label in label_array:
+        prototype_hypermatrix = np.empty(dimensionality, dtype = np.int_)
+
+        for index, training_label in enumerate(training_labels):
+            if training_label == current_label:
+                prototype_hypermatrix = np.vstack((prototype_hypermatrix, encode_analog(training_features[index], level_item_memory, id_item_memory, vsa)))
+
+        associative_memory[label_dictionary[current_label]] = multibundle(prototype_hypermatrix[1:][:], vsa)
+
+    return associative_memory
+
+def test_analog(
+    testing_features:np.array,
+    testing_labels:np.array,
+    label_dictionary:dict,
+    associative_memory:np.array,
+    id_item_memory:np.array,
+    level_item_memory:np.array,
+    vsa:np.str_
+) -> np.double:
+    number_of_hits  = 0
+    number_of_tests = np.shape(testing_labels)[0]
+
+    for index, query_vector in enumerate(testing_features):
+        query_hypervector   = encode_analog(query_vector, level_item_memory, id_item_memory, vsa)
+        predicted_class     = classify(query_hypervector, associative_memory, vsa)
+        actual_class        = label_dictionary[testing_labels[index]]
+
+        if predicted_class == actual_class:
+            number_of_hits += 1
+
+    return number_of_hits / number_of_tests * 100
+
 # Note: An 'equivalence dictionary' is required to transform
 # any label (a str-type object) into an integer number 
 # between [0, number_of_classes).
@@ -98,8 +144,8 @@ def retrain_analog(
 
     for index in range(number_of_queries):
         query_hypervector   = encode_analog(training_data[index][:], level_item_memory, id_item_memory, vsa)
-        predicted_class     = classify(associative_memory, query_hypervector, vsa)
-        actual_class        = equivalence_dictionary(training_labels[index])
+        predicted_class     = classify(query_hypervector, associative_memory, vsa)
+        actual_class        = equivalence_dictionary[training_labels[index]]
 
         # Caution: We assume training labels start from zero!
         if predicted_class != actual_class:
@@ -108,6 +154,6 @@ def retrain_analog(
 
     # Once retraining is done, re-binarize the associative memory.
     for index in range(number_of_classes):
-                retrained_memory[index] = binarize(retrained_memory[index], vsa)
+        retrained_memory[index] = binarize(retrained_memory[index], vsa)
 
     return retrained_memory
