@@ -29,7 +29,7 @@ test_proportion = 0.2
 training_features, testing_features, training_labels, testing_labels = get_dataset(dataset_name, save_directory, test_proportion)
 
 # 2) Define model parameters.
-vsa                     = 'BSC'
+vsa                     = 'MAP'
 number_of_dimensions    = 10000
 number_of_classes       = 6
 number_of_levels        = 10

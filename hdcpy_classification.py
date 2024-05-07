@@ -27,9 +27,18 @@ def get_id_hypermatrix(number_of_ids:np.uint, dimensionality:np.uint, vsa:np.str
     return id_hypermatrix
 
 def get_level_hypervector(feature:np.double, level_item_memory:np.array) -> np.array:
-    quantization_range = np.linspace(-1, 1, np.shape(level_item_memory)[0])
+    number_of_levels    = np.shape(level_item_memory)[0]
+    quantization_range  = np.linspace(-1, 1, number_of_levels)
 
-    return level_item_memory[np.digitize(feature, quantization_range, True)]
+    index = np.digitize(feature, quantization_range, False)
+
+    if index > number_of_levels - 1:
+        return level_item_memory[index - 1]
+    
+    else:
+        return level_item_memory[index]
+
+    #return level_item_memory[np.digitize(feature, quantization_range, False)]
 
 def get_id_hypervector(id:np.uint, id_item_memory:np.array) -> np.array:
     return id_item_memory[id]
