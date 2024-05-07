@@ -4,21 +4,21 @@ from hdcpy_auxiliary        import *
 
 # 0) Preparation.
 equivalence_dictionary = {
-    '1'     : 0,
-    '2'     : 1,
-    '3'     : 2,
-    '4'     : 3,
-    '5'     : 4,
-    '6'     : 5
+    'N'     : 0,
+    'EI'    : 1,
+    'IE'    : 2
 }
 
 labels = [
-    '1', 
-    '2', 
-    '3', 
-    '4', 
-    '5', 
-    '6'
+    'A', 
+    'G', 
+    'T', 
+    'C',
+     
+    'D', 
+    'N',
+    'S',
+    'R'
 ]
 
 # 1) Fetch dataset.
