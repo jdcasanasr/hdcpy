@@ -15,6 +15,14 @@ def get_level_hypermatrix(number_of_levels:np.uint, dimensionality:np.uint, vsa:
 
     return level_hypermatrix
 
+def get_base_hypermatrix(number_of_bases:np.uint, dimensionality:np.uint, vsa:np.str_) -> np.array:
+    base_hypermatrix = np.empty((number_of_bases, dimensionality), np.int_)
+
+    for index in range(number_of_bases):
+        base_hypermatrix[index] = random_hypervector(dimensionality, vsa)
+
+    return base_hypermatrix
+
 def get_id_hypermatrix(number_of_ids:np.uint, dimensionality:np.uint, vsa:np.str_) -> np.array:
     if vsa not in supported_vsas:
         raise ValueError(f'{vsa} is not a supported VSA.')
@@ -37,8 +45,9 @@ def get_level_hypervector(feature:np.double, level_item_memory:np.array) -> np.a
     
     else:
         return level_item_memory[index]
-
-    #return level_item_memory[np.digitize(feature, quantization_range, False)]
+    
+def get_base_hypervector(base:np.str_, base_dictionary:dict, base_item_memory:np.array) -> np.array:
+    return base_item_memory[base_dictionary[base]]
 
 def get_id_hypervector(id:np.uint, id_item_memory:np.array) -> np.array:
     return id_item_memory[id]
@@ -53,6 +62,16 @@ def encode_analog(bin_vector:np.array, level_item_memory:np.array, id_item_memor
 
     for index in range(number_of_bins):
         bind_hypermatrix[index] = bind(get_id_hypervector(index, id_item_memory), get_level_hypervector(bin_vector[index], level_item_memory), vsa)
+
+    return multibundle(bind_hypermatrix, vsa)
+
+def encode_discrete(base_vector:np.array, base_dictionary:dict, base_item_memory:np.array, id_item_memory:np.array, vsa:np.str_) -> np.array:
+    number_of_bases     = np.shape(base_vector)[0]
+    bind_hypermatrix    = np.empty(np.shape(id_item_memory), np.int_)
+
+    for index in range(number_of_bases):
+        bind_hypermatrix[index] = bind(get_id_hypervector(index, id_item_memory),
+                                       get_base_hypervector(base_vector[index], base_dictionary, base_item_memory))
 
     return multibundle(bind_hypermatrix, vsa)
 
@@ -105,6 +124,33 @@ def train_analog(
 
     return associative_memory
 
+def train_discrete(
+    training_features:np.array,
+    training_labels:np.array,
+    label_array:np.array,
+    label_dictionary:dict,
+    id_item_memory:np.array,
+    base_dictionary:dict,
+    base_item_memory:np.array,
+    vsa:np.str_
+) -> np.array:
+    dimensionality          = np.shape(id_item_memory)[1]
+    number_of_classes       = np.shape(label_array)[0]
+    associative_memory      = np.empty((number_of_classes, dimensionality), np.int_)
+
+    for current_label in label_array:
+        prototype_hypermatrix = np.empty(dimensionality, dtype = np.int_)
+
+        for index, training_label in enumerate(training_labels):
+            if training_label == current_label:
+                prototype_hypermatrix = np.vstack((prototype_hypermatrix,
+                                                   encode_discrete(training_features[index], base_dictionary,
+                                                                   base_item_memory, id_item_memory, vsa)))
+
+        associative_memory[label_dictionary[current_label]] = multibundle(prototype_hypermatrix[1:][:], vsa)
+
+    return associative_memory
+
 def test_analog(
     testing_features:np.array,
     testing_labels:np.array,
@@ -119,6 +165,29 @@ def test_analog(
 
     for index, query_vector in enumerate(testing_features):
         query_hypervector   = encode_analog(query_vector, level_item_memory, id_item_memory, vsa)
+        predicted_class     = classify(query_hypervector, associative_memory, vsa)
+        actual_class        = label_dictionary[testing_labels[index]]
+
+        if predicted_class == actual_class:
+            number_of_hits += 1
+
+    return number_of_hits / number_of_tests * 100
+
+def test_discrete(
+    testing_features:np.array,
+    testing_labels:np.array,
+    label_dictionary:dict,
+    associative_memory:np.array,
+    id_item_memory:np.array,
+    base_dictionary:dict,
+    base_item_memory:np.array,
+    vsa:np.str_
+) -> np.double:
+    number_of_hits  = 0
+    number_of_tests = np.shape(testing_labels)[0]
+
+    for index, query_vector in enumerate(testing_features):
+        query_hypervector   = encode_discrete(query_vector, base_dictionary, base_item_memory, id_item_memory, vsa)
         predicted_class     = classify(query_hypervector, associative_memory, vsa)
         actual_class        = label_dictionary[testing_labels[index]]
 

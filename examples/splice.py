@@ -3,26 +3,32 @@ from hdcpy_classification   import *
 from hdcpy_auxiliary        import *
 
 # 0) Preparation.
-equivalence_dictionary = {
+base_dictionary = {
+    'A' : 0, 
+    'G' : 1, 
+    'T' : 2, 
+    'C' : 3,
+
+    'D' : 4, 
+    'N' : 5,
+    'S' : 6,
+    'R' : 7
+}
+
+label_array = [
+    'N',
+    'EI',
+    'IE'
+]
+
+label_dictionary = {
     'N'     : 0,
     'EI'    : 1,
     'IE'    : 2
 }
 
-labels = [
-    'A', 
-    'G', 
-    'T', 
-    'C',
-     
-    'D', 
-    'N',
-    'S',
-    'R'
-]
-
 # 1) Fetch dataset.
-dataset_name    = 'har'
+dataset_name    = 'splice'
 save_directory  = '../data'
 test_proportion = 0.2
 
@@ -32,21 +38,21 @@ training_features, testing_features, training_labels, testing_labels = get_datas
 vsa                     = 'MAP'
 number_of_dimensions    = 10000
 number_of_classes       = 3
-number_of_levels        = 10
+number_of_bases         = 8
 number_of_ids           = np.shape(training_features)[1]
 
 # 3) Model preparation.
 id_item_memory          = get_id_hypermatrix(number_of_ids, number_of_dimensions, vsa)
-level_item_memory       = get_level_hypermatrix(number_of_levels, number_of_dimensions, vsa)
+base_item_memory        = get_base_hypermatrix(number_of_bases, number_of_dimensions, vsa)
 
 number_of_hits          = 0
 number_of_tests         = np.shape(testing_features)[0]
 
 # 4) Train the model.
-associative_memory = train_analog(training_features, training_labels,
-                                  labels, equivalence_dictionary,
-                                  id_item_memory, level_item_memory,
-                                  vsa)
+associative_memory = train_discrete(training_features, training_labels,
+                                    label_array, label_dictionary,
+                                    id_item_memory, base_dictionary,
+                                    base_item_memory, vsa)
 
 # 5) Retrain the model.
 #retrained_associative_memory = retrain_analog(
@@ -56,9 +62,9 @@ associative_memory = train_analog(training_features, training_labels,
 #    vsa)
 
 # 6) Test the model.
-accuracy = test_analog(testing_features, testing_labels,
-                       equivalence_dictionary, associative_memory,
-                       id_item_memory, level_item_memory,
-                       vsa)
+accuracy = test_discrete(testing_features, testing_labels,
+                         label_dictionary, associative_memory,
+                         id_item_memory, base_dictionary,
+                         base_item_memory, vsa)
 
 print(f'Accuracy: {accuracy:0.2f}')
