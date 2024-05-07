@@ -9,27 +9,7 @@ equivalence_dictionary = {
     '3'     : 2,
     '4'     : 3,
     '5'     : 4,
-    '6'     : 5,
-    '7'     : 6, 
-    '8'     : 7,
-    '9'     : 8,
-    '10'    : 9,
-    '11'    : 10,
-    '12'    : 11,
-    '13'    : 12,
-    '14'    : 13,
-    '15'    : 14,
-    '16'    : 15,
-    '17'    : 16,
-    '18'    : 17,
-    '19'    : 18,
-    '20'    : 19,
-    '21'    : 20,
-    '22'    : 21,
-    '23'    : 22,
-    '24'    : 23,
-    '25'    : 24,
-    '26'    : 25
+    '6'     : 5
 }
 
 labels = [
@@ -38,40 +18,20 @@ labels = [
     '3', 
     '4', 
     '5', 
-    '6', 
-    '7', 
-    '8', 
-    '9', 
-    '10',
-    '11',
-    '12',
-    '13',
-    '14',
-    '15',
-    '16',
-    '17',
-    '18',
-    '19',
-    '20',
-    '21',
-    '22',
-    '23',
-    '24',
-    '25',
-    '26'
+    '6'
 ]
 
 # 1) Fetch dataset.
-dataset_name    = 'isolet'
+dataset_name    = 'har'
 save_directory  = '../data'
 test_proportion = 0.2
 
 training_features, testing_features, training_labels, testing_labels = get_dataset(dataset_name, save_directory, test_proportion)
 
 # 2) Define model parameters.
-vsa                     = 'BSC'
+vsa                     = 'MAP'
 number_of_dimensions    = 10000
-number_of_classes       = 26
+number_of_classes       = 3
 number_of_levels        = 10
 number_of_ids           = np.shape(training_features)[1]
 
