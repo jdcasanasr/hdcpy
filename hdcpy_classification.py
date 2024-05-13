@@ -235,3 +235,42 @@ def retrain_analog(
         retrained_memory[index] = binarize(retrained_memory[index], vsa)
 
     return retrained_memory
+
+def retrain_discrete(
+    associative_memory:np.array,
+    training_data:np.array,
+    training_labels:np.array,
+    base_item_memory:np.array,
+    base_dictionary:dict,
+    id_item_memory:np.array,
+    equivalence_dictionary:dict,
+    vsa:np.str_
+) -> np.array:
+    
+    number_of_queries   = np.shape(training_data)[0]
+    number_of_labels    = np.shape(training_labels)[0]
+    number_of_classes   = np.shape(associative_memory)[0]
+
+    retrained_memory    = associative_memory
+
+    if vsa not in supported_vsas:
+        raise ValueError(f'{vsa} is not a supported VSA.')
+
+    if number_of_queries != number_of_labels:
+        raise ValueError(f'Number of queries ({number_of_queries}) and labels ({number_of_labels}) do not match.')
+
+    for index, training_sample in enumerate(training_data):
+        query_hypervector   = encode_discrete(training_sample, base_dictionary, base_item_memory, id_item_memory, vsa)
+        predicted_class     = classify(query_hypervector, associative_memory, vsa)
+        actual_class        = equivalence_dictionary[training_labels[index]]
+
+        # Caution: We assume training labels start from zero!
+        if predicted_class != actual_class:
+            retrained_memory[predicted_class] = np.subtract(associative_memory[predicted_class], query_hypervector)
+            retrained_memory[actual_class]    = np.add(associative_memory[actual_class], query_hypervector)
+
+    # Once retraining is done, re-binarize the associative memory.
+    for index in range(number_of_classes):
+        retrained_memory[index] = binarize(retrained_memory[index], vsa)
+
+    return retrained_memory
