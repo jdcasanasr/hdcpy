@@ -71,7 +71,7 @@ def encode_discrete(base_vector:np.array, base_dictionary:dict, base_item_memory
 
     for index in range(number_of_bases):
         bind_hypermatrix[index] = bind(get_id_hypervector(index, id_item_memory),
-                                       get_base_hypervector(base_vector[index], base_dictionary, base_item_memory))
+                                       get_base_hypervector(base_vector[index], base_dictionary, base_item_memory), vsa)
 
     return multibundle(bind_hypermatrix, vsa)
 
