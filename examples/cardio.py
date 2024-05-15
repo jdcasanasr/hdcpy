@@ -30,7 +30,7 @@ training_features, testing_features, y_train, y_test = get_dataset(dataset_name,
 # Normalize features between -1.0 and 1.0
 scaler      = MinMaxScaler(feature_range = (-1.0, 1.0))
 X_train     = scaler.fit_transform(training_features.astype(float))
-X_test      = scaler.fit_transform(testing_features.astype(float))
+X_test      = scaler.transform(testing_features.astype(float))
 
 # 2) Define model parameters.
 vsa                     = 'BSC'
