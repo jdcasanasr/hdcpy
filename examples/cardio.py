@@ -59,5 +59,3 @@ accuracy = test_analog(X_test, y_test,
                        vsa)
 
 print(f'Accuracy: {accuracy:0.2f}')
-
-pass
