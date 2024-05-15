@@ -55,13 +55,13 @@ associative_memory = train_discrete(training_features, training_labels,
                                     base_item_memory, vsa)
 
 # 5) Retrain the model.
-retrained_associative_memory = retrain_discrete(associative_memory, training_features,
-                                                training_labels, base_item_memory,
-                                                base_dictionary, id_item_memory,
-                                                label_dictionary, vsa)
+#retrained_associative_memory = retrain_discrete(associative_memory, training_features,
+#                                                training_labels, base_item_memory,
+#                                                base_dictionary, id_item_memory,
+#                                                label_dictionary, vsa)
 # 6) Test the model.
 accuracy = test_discrete(testing_features, testing_labels,
-                         label_dictionary, retrained_associative_memory,
+                         label_dictionary, associative_memory,
                          id_item_memory, base_dictionary,
                          base_item_memory, vsa)
 
