@@ -1,31 +1,31 @@
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import pandas as pd
-from sklearn.model_selection import train_test_split
+
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score
+from hdcpy_auxiliary import get_dataset
 
 # Load the dataset
-data = pd.read_csv('Cardiotocography.csv')
+dataset_name    = 'cardiotocography'
+save_directory  = '../data'
+test_proportion = 0.2
 
-# Preprocessing
-X = data.iloc[:, :-1].values  # Features
-y = data.iloc[:, -1].values   # Target
-
-# Split the data into train and test sets
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test = get_dataset(dataset_name, save_directory, test_proportion)
 
 # Standardize the features
-scaler = StandardScaler()
+scaler  = StandardScaler()
 X_train = scaler.fit_transform(X_train)
-X_test = scaler.transform(X_test)
+X_test  = scaler.transform(X_test)
+y_train = list(map(int, y_train))
+y_test  = list(map(int, y_test))
 
 # Convert data to PyTorch tensors
-X_train = torch.tensor(X_train, dtype=torch.float32)
-X_test = torch.tensor(X_test, dtype=torch.float32)
-y_train = torch.tensor(y_train, dtype=torch.long)
-y_test = torch.tensor(y_test, dtype=torch.long)
+X_train = torch.tensor(X_train, dtype = torch.float32)
+X_test  = torch.tensor(X_test,  dtype = torch.float32)
+y_train = torch.tensor(y_train, dtype = torch.long)
+y_test  = torch.tensor(y_test,  dtype = torch.long)
 
 # Define the neural network
 class CardioNet(nn.Module):
@@ -33,7 +33,7 @@ class CardioNet(nn.Module):
         super(CardioNet, self).__init__()
         self.fc1 = nn.Linear(X_train.shape[1], 64)
         self.fc2 = nn.Linear(64, 32)
-        self.fc3 = nn.Linear(32, 3)  # Assuming 3 classes for the target variable
+        self.fc3 = nn.Linear(32, 10)  # Assuming 3 classes for the target variable
         self.relu = nn.ReLU()
         self.dropout = nn.Dropout(0.5)
 
