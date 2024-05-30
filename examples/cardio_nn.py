@@ -27,6 +27,9 @@ X_test  = torch.tensor(X_test,  dtype = torch.float32)
 y_train = torch.tensor(y_train, dtype = torch.long)
 y_test  = torch.tensor(y_test,  dtype = torch.long)
 
+y_train = y_train   - 1
+y_test  = y_test    - 1
+
 # Define the neural network
 class CardioNet(nn.Module):
     def __init__(self):
@@ -68,4 +71,4 @@ with torch.no_grad():
     outputs = model(X_test)
     _, predicted = torch.max(outputs.data, 1)
     accuracy = accuracy_score(y_test, predicted)
-    print(f'Accuracy: {accuracy:.4f}')
+    print(f'Accuracy: {accuracy * 100:0.2f}')

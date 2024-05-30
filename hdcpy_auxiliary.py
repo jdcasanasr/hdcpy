@@ -5,6 +5,30 @@ from hdcpy                      import *
 from sklearn.datasets           import fetch_openml
 from sklearn.model_selection    import train_test_split
 
+def substitute_characters(arr):
+    # Define the mapping from characters to integers
+    char_to_int = {'A': 0, 'G': 1, 'T': 2, 'C': 3, 'D': 4, 'N': 5, 'S': 6, 'R': 7}
+    
+    # Vectorized substitution using numpy
+    vectorized_substitution = np.vectorize(lambda x: char_to_int[x])
+    
+    # Apply the substitution
+    int_array = vectorized_substitution(arr)
+    
+    return int_array
+
+def sub_2(arr):
+    # Define the mapping from characters to integers
+    char_to_int = {'N': 0, 'EI': 1, 'IE': 2}
+    
+    # Vectorized substitution using numpy
+    vectorized_substitution = np.vectorize(lambda x: char_to_int[x])
+    
+    # Apply the substitution
+    int_array = vectorized_substitution(arr)
+    
+    return int_array
+
 def flip(u:np.array, number_of_positions:np.uint, vsa:np.str_) -> np.array:
     if vsa not in supported_vsas:
         raise ValueError(f'{vsa} is not a supported VSA.')
