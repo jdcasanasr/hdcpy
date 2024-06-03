@@ -1,8 +1,8 @@
 import numpy as np
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.metrics import accuracy_score
-from sklearn.preprocessing import LabelEncoder
 
+from sklearn.metrics import accuracy_score
+from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score, classification_report
 from hdcpy_auxiliary import get_dataset, replace_features
 
 dataset_name    = 'splice'
@@ -19,16 +19,17 @@ X_test      = replace_features(X_test, features_dictionary).astype(np.int_)
 y_train     = replace_features(y_train, labels_dictionary).astype(np.int_)
 y_test      = replace_features(y_test, labels_dictionary).astype(np.int_)
 
-# Define the KNN classifier
-k = 5  # Number of neighbors
-knn = KNeighborsClassifier(n_neighbors=k)
+# Train the SVM model
+svm_model = SVC(kernel='linear', random_state=42)
+svm_model.fit(X_train, y_train)
 
-# Train the KNN classifier
-knn.fit(X_train, y_train)
-
-# Predict labels for the test set
-y_pred = knn.predict(X_test)
+# Predict on the test set
+y_pred = svm_model.predict(X_test)
 
 # Evaluate the model
 accuracy = accuracy_score(y_test, y_pred)
-print(f'Accuracy: {accuracy * 100:0.2f}')
+report = classification_report(y_test, y_pred)
+
+print(f'Accuracy: {accuracy}')
+print('Classification Report:')
+print(report)
