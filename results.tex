@@ -1,0 +1,43 @@
+\documentclass{standalone}
+
+\begin{document}
+    \begin{tabular}{|c|c|c|}
+        \hline
+        \textbf{Dataset} & \textbf{Model} & \textbf{Accuracy} \\
+        \hline
+        \multirow{4}{*}{ISOLET} & HDC   & 86.04 \% \\
+                                & NN    & 86.37 \% \\
+                                & SVM   & 96.09 \% \\
+                                & KNN   & 86.03 \% \\
+        \hline
+        \multirow{4}{*}{UCIHAR} & HDC   & 80.97 \% \\
+                                & NN    & 86.63 \% \\
+                                & SVM   & 99.08 \% \\
+                                & KNN   & 95.97 \% \\
+        \hline
+        \multirow{4}{*}{SPLICE} & HDC   & 94.04 \% \\
+                                & NN    & xx.xx \% \\
+                                & SVM   & xx.xx \% \\
+                                & KNN   & xx.xx \% \\
+        \hline
+        \multirow{4}{*}{CARDIO} & HDC   & 100.0 \% \\
+                                & NN    & 76.53 \% \\
+                                & SVM   & 100.0 \% \\
+                                & KNN   & 99.30 \% \\
+        \hline
+    \end{tabular}
+
+    \begin{tabular}{|c|c|c|c|c|}
+        \hline
+        \textbf{Dataset} & \textbf{Description} & \textbf{Domain} & \textbf{Features} & \textbf{Classes} \\
+        \hline
+        ISOLET & & IoT        & 617   & 26 \\
+        \hline
+        UCIHAR & & IoT        & 562   & 6 \\
+        \hline
+        SPLICE & & Biology    & 61    & 3 \\
+        \hline
+        CARDIO & & Biology    & 21    & 10 \\
+        \hline
+    \end{tabular}
+\end{document}
