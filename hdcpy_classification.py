@@ -52,6 +52,9 @@ def get_base_hypervector(base:np.str_, base_dictionary:dict, base_item_memory:np
 def get_id_hypervector(id:np.uint, id_item_memory:np.array) -> np.array:
     return id_item_memory[id]
 
+def get_pixel_hypervector(pixel_value:np.int_, pixel_level_memory:np.array):
+    return pixel_level_memory[pixel_value]
+
 def encode_analog(bin_vector:np.array, level_item_memory:np.array, id_item_memory:np.array, vsa:np.str_) -> np.array:
     number_of_bins      = np.shape(bin_vector)[0]
 
@@ -74,6 +77,24 @@ def encode_discrete(base_vector:np.array, base_dictionary:dict, base_item_memory
                                        get_base_hypervector(base_vector[index], base_dictionary, base_item_memory), vsa)
 
     return multibundle(bind_hypermatrix, vsa)
+
+def encode_image(image:np.array, x_item_memory:np.array, y_item_memory:np.array, pixel_level_memory:np.array, vsa:np.str_) -> np.array:
+    number_of_rows, number_of_columns = np.shape(image)
+    dimensionality = np.shape(x_item_memory)[1]
+
+    hypermatrix         = np.empty((number_of_rows * number_of_columns), dimensionality, np.int_)
+    bind_hypervector    = np.empty(dimensionality, np.int_)
+    index               = 0
+
+    for row in range(number_of_rows):
+        for column in range(number_of_columns):
+            pixel_hypervector = get_pixel_hypervector(image[row][column], pixel_level_memory)
+            bind_hypervector = bind(x_item_memory[column], bind(y_item_memory[row]), pixel_hypervector)
+
+            hypermatrix[index] = bind_hypervector
+            index += 1
+
+    return multibundle(hypermatrix, vsa)
 
 def classify(query_hypervector:np.array, associative_memory:np.array, vsa:np.str_) -> np.uint:
     if vsa not in supported_vsas:
