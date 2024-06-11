@@ -100,6 +100,16 @@ def classify(query_hypervector:np.array, associative_memory:np.array, vsa:np.str
 
             return -1
 
+def retrain(associative_memory:np.array, training_dataset:np.array, training_labels:np.array, level_item_memory:np.array, id_item_memory:np.array, vsa:np.str_):
+
+    predicted_labels = np.empty(np.shape(training_dataset)[0], np.int_)
+
+    for index, feature_vector in enumerate(training_dataset):
+        predicted_labels[index] = classify(encode_analog(feature_vector, level_item_memory, id_item_memory, vsa), associative_memory, vsa)
+
+    scoreboard      = True if (predicted_labels == training_labels) else False
+    miss_indeces    = np.where(scoreboard == False)
+
 def train_analog(
     training_features:np.array,
     training_labels:np.array,
