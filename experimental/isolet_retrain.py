@@ -81,17 +81,12 @@ level_item_memory       = get_level_hypermatrix(number_of_levels, number_of_dime
 associative_memory      = np.empty((number_of_classes, number_of_dimensions), np.int_)
 
 # 4) Train the model.
-associative_memory = train_analog(training_features, training_labels,
-                                  labels, equivalence_dictionary,
-                                  id_item_memory, level_item_memory,
-                                  vsa)
-
+associative_memory = train_analog(training_features, training_labels, number_of_classes, id_item_memory, level_item_memory, vsa)
 # 5) Retrain the model.
 retrained_associative_memory = retrain_analog(associative_memory, training_features, training_labels, level_item_memory, id_item_memory, vsa)
 
 # 6) Test the model.
-accuracy = test_analog(testing_features, testing_labels,
-                       equivalence_dictionary, retrained_associative_memory,
+accuracy = test_analog(testing_features, testing_labels, retrained_associative_memory,
                        id_item_memory, level_item_memory,
                        vsa)
 

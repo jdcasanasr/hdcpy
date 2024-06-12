@@ -119,7 +119,7 @@ def retrain_analog(associative_memory:np.array, training_dataset:np.array, train
     for index, encoded_feature_vector in enumerate(encoded_dataset):
         predicted_labels[index] = classify(encoded_feature_vector, associative_memory, vsa)
 
-    scoreboard           = True if (predicted_labels == training_labels) else False
+    scoreboard           = (predicted_labels == training_labels).all()
     miss_indeces         = np.where(scoreboard == False)
 
     # Get Non-Binarized, Retrained Associative Memory.
@@ -140,24 +140,22 @@ def retrain_analog(associative_memory:np.array, training_dataset:np.array, train
 def train_analog(
     training_features:np.array,
     training_labels:np.array,
-    label_array:np.array,
-    label_dictionary:dict,
+    number_of_classes:np.int_,
     id_item_memory:np.array,
     level_item_memory:np.array,
     vsa:np.str_
 ) -> np.array:
     dimensionality          = np.shape(id_item_memory)[1]
-    number_of_classes       = np.shape(label_array)[0]
     associative_memory      = np.empty((number_of_classes, dimensionality), np.int_)
 
-    for current_label in label_array:
+    for current_label in range(number_of_classes):
         prototype_hypermatrix = np.empty(dimensionality, dtype = np.int_)
 
         for index, training_label in enumerate(training_labels):
             if training_label == current_label:
                 prototype_hypermatrix = np.vstack((prototype_hypermatrix, encode_analog(training_features[index], level_item_memory, id_item_memory, vsa)))
 
-        associative_memory[label_dictionary[current_label]] = multibundle(prototype_hypermatrix[1:][:], vsa)
+        associative_memory[current_label] = multibundle(prototype_hypermatrix[1:][:], vsa)
 
     return associative_memory
 
@@ -191,7 +189,6 @@ def train_discrete(
 def test_analog(
     testing_features:np.array,
     testing_labels:np.array,
-    label_dictionary:dict,
     associative_memory:np.array,
     id_item_memory:np.array,
     level_item_memory:np.array,
@@ -203,7 +200,7 @@ def test_analog(
     for index, query_vector in enumerate(testing_features):
         query_hypervector   = encode_analog(query_vector, level_item_memory, id_item_memory, vsa)
         predicted_class     = classify(query_hypervector, associative_memory, vsa)
-        actual_class        = label_dictionary[testing_labels[index]]
+        actual_class        = testing_labels[index]
 
         if predicted_class == actual_class:
             number_of_hits += 1
