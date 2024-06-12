@@ -100,15 +100,42 @@ def classify(query_hypervector:np.array, associative_memory:np.array, vsa:np.str
 
             return -1
 
-def retrain(associative_memory:np.array, training_dataset:np.array, training_labels:np.array, level_item_memory:np.array, id_item_memory:np.array, vsa:np.str_):
+# Version 1: Retrain All, Then Binarize.
+# Version 2: Retrain And Binarize For Each Misprediction.
+# Version 3: All Is Non-Binary, Except For Distance Calculation.
+def retrain_analog(associative_memory:np.array, training_dataset:np.array, training_labels:np.array, level_item_memory:np.array, id_item_memory:np.array, vsa:np.str_):
 
-    predicted_labels = np.empty(np.shape(training_dataset)[0], np.int_)
+    predicted_labels                = np.empty(np.shape(training_dataset)[0], np.int_)
+    number_of_feature_vectors       = np.shape(training_dataset)[0]
+    number_of_dimensions            = np.shape(associative_memory)[1]
+    encoded_dataset                 = np.empty((number_of_feature_vectors, number_of_dimensions), np.int_)
+    non_binary_associative_memory   = np.empty(np.shape(associative_memory), np.int_)
 
+    # Pre-Encode Dataset
     for index, feature_vector in enumerate(training_dataset):
-        predicted_labels[index] = classify(encode_analog(feature_vector, level_item_memory, id_item_memory, vsa), associative_memory, vsa)
+        encoded_dataset[index] = encode_analog(feature_vector, level_item_memory, id_item_memory, vsa)
 
-    scoreboard      = True if (predicted_labels == training_labels) else False
-    miss_indeces    = np.where(scoreboard == False)
+    # Classify And Store Predicted Labels.
+    for index, encoded_feature_vector in enumerate(encoded_dataset):
+        predicted_labels[index] = classify(encoded_feature_vector, associative_memory, vsa)
+
+    scoreboard           = True if (predicted_labels == training_labels) else False
+    miss_indeces         = np.where(scoreboard == False)
+
+    # Get Non-Binarized, Retrained Associative Memory.
+
+    non_binary_associative_memory = np.copy(associative_memory)
+
+    for miss_index in miss_indeces:
+        correct_class       = training_labels[miss_index]
+        mispredicted_class  = predicted_labels[miss_index]
+        bad_query           = encoded_dataset[miss_index]
+
+        non_binary_associative_memory[correct_class]       = np.add(associative_memory[correct_class], bad_query)
+        non_binary_associative_memory[mispredicted_class]  = np.subtract(associative_memory[mispredicted_class], bad_query)
+
+    
+    return binarize(non_binary_associative_memory, vsa)
 
 def train_analog(
     training_features:np.array,
@@ -205,82 +232,3 @@ def test_discrete(
             number_of_hits += 1
 
     return number_of_hits / number_of_tests * 100
-
-# Note: An 'equivalence dictionary' is required to transform
-# any label (a str-type object) into an integer number 
-# between [0, number_of_classes).
-def retrain_analog(
-    associative_memory:np.array,
-    training_data:np.array,
-    training_labels:np.array,
-    level_item_memory:np.array,
-    id_item_memory:np.array,
-    equivalence_dictionary:dict,
-    vsa:np.str_
-) -> np.array:
-    number_of_queries   = np.shape(training_data)[0]
-    number_of_labels    = np.shape(training_labels)[0]
-    number_of_classes   = np.shape(associative_memory)[0]
-
-    retrained_memory    = associative_memory
-
-    if vsa not in supported_vsas:
-        raise ValueError(f'{vsa} is not a supported VSA.')
-
-    if number_of_queries != number_of_labels:
-        raise ValueError(f'Number of queries ({number_of_queries}) and labels ({number_of_labels}) do not match.')
-
-    for index in range(number_of_queries):
-        query_hypervector   = encode_analog(training_data[index][:], level_item_memory, id_item_memory, vsa)
-        predicted_class     = classify(query_hypervector, associative_memory, vsa)
-        actual_class        = equivalence_dictionary[training_labels[index]]
-
-        # Caution: We assume training labels start from zero!
-        if predicted_class != actual_class:
-            retrained_memory[predicted_class] = np.subtract(associative_memory[predicted_class], query_hypervector)
-            retrained_memory[actual_class]    = np.add(associative_memory[actual_class], query_hypervector)
-
-    # Once retraining is done, re-binarize the associative memory.
-    for index in range(number_of_classes):
-        retrained_memory[index] = binarize(retrained_memory[index], vsa)
-
-    return retrained_memory
-
-def retrain_discrete(
-    associative_memory:np.array,
-    training_data:np.array,
-    training_labels:np.array,
-    base_item_memory:np.array,
-    base_dictionary:dict,
-    id_item_memory:np.array,
-    equivalence_dictionary:dict,
-    vsa:np.str_
-) -> np.array:
-    
-    number_of_queries   = np.shape(training_data)[0]
-    number_of_labels    = np.shape(training_labels)[0]
-    number_of_classes   = np.shape(associative_memory)[0]
-
-    retrained_memory    = associative_memory
-
-    if vsa not in supported_vsas:
-        raise ValueError(f'{vsa} is not a supported VSA.')
-
-    if number_of_queries != number_of_labels:
-        raise ValueError(f'Number of queries ({number_of_queries}) and labels ({number_of_labels}) do not match.')
-
-    for index, training_sample in enumerate(training_data):
-        query_hypervector   = encode_discrete(training_sample, base_dictionary, base_item_memory, id_item_memory, vsa)
-        predicted_class     = classify(query_hypervector, associative_memory, vsa)
-        actual_class        = equivalence_dictionary[training_labels[index]]
-
-        # Caution: We assume training labels start from zero!
-        if predicted_class != actual_class:
-            retrained_memory[predicted_class] = np.subtract(associative_memory[predicted_class], query_hypervector)
-            retrained_memory[actual_class]    = np.add(associative_memory[actual_class], query_hypervector)
-
-    # Once retraining is done, re-binarize the associative memory.
-    for index in range(number_of_classes):
-        retrained_memory[index] = binarize(retrained_memory[index], vsa)
-
-    return retrained_memory
