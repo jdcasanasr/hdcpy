@@ -4,7 +4,7 @@ import os
 from hdcpy                      import *
 from sklearn.datasets           import fetch_openml
 from sklearn.model_selection    import train_test_split
-
+from sklearn.preprocessing      import LabelEncoder
 
 # Replace a feature for another symbol in a dictionary, useful when dealing with
 # string-based datasets, like SPLICE.
@@ -67,21 +67,24 @@ def get_dataset(dataset_name: str, save_directory:str, test_proportion:float):
     if not os.path.exists(save_directory):
         os.makedirs(save_directory)
 
-    file_path = os.path.join(save_directory, f'{dataset_name}.csv')
+    file_path       = os.path.join(save_directory, f'{dataset_name}.csv')
+    label_encoder   = LabelEncoder()
 
     if not os.path.exists(file_path):
         dataset         = fetch_openml(name = dataset_name, version = 1, parser = 'auto')
         data            = np.array(dataset.data)
         target          = np.array(dataset.target)
         dataset_array   = np.column_stack((data, target))
+        target_encoded  = label_encoder.fit_transform(target)
 
         np.savetxt(file_path, dataset_array, delimiter = ',', fmt = '%s')
 
-        return train_test_split(data, target, test_size = test_proportion)
+        return train_test_split(data, target_encoded, test_size = test_proportion)
 
     else:
         dataset_array   = np.genfromtxt(file_path, delimiter = ',', dtype = np.str_)
         data            = np.array(dataset_array[:, :-1])
         target          = np.array(dataset_array[:, -1])
+        target_encoded  = label_encoder.fit_transform(target)
 
-        return train_test_split(data, target, test_size = test_proportion)
+        return train_test_split(data, target_encoded, test_size = test_proportion)
