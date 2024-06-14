@@ -65,6 +65,16 @@ def encode_analog(bin_vector:np.array, level_item_memory:np.array, id_item_memor
 
     return multibundle(bind_hypermatrix, vsa)
 
+def encode_dataset(dataset:np.array, level_item_memory:np.array, id_item_memory:np.array, vsa:np.str_) -> np.array:
+    number_of_feature_vectors   = np.shape(dataset)[0]
+    number_of_dimensions        = np.shape(level_item_memory)[1]
+    encoded_dataset             = np.empty((number_of_feature_vectors, number_of_dimensions), np.int_)
+
+    for index, feature_vector in enumerate(dataset):
+        encoded_dataset[index] = encode_analog(feature_vector, level_item_memory, id_item_memory, vsa)
+
+    return encoded_dataset
+
 def encode_discrete(base_vector:np.array, base_dictionary:dict, base_item_memory:np.array, id_item_memory:np.array, vsa:np.str_) -> np.array:
     number_of_bases     = np.shape(base_vector)[0]
     bind_hypermatrix    = np.empty(np.shape(id_item_memory), np.int_)
@@ -103,17 +113,10 @@ def classify(query_hypervector:np.array, associative_memory:np.array, vsa:np.str
 # Version 1: Retrain All, Then Binarize.
 # Version 2: Retrain And Binarize For Each Misprediction.
 # Version 3: All Is Non-Binary, Except For Distance Calculation.
-def retrain_analog(associative_memory:np.array, training_dataset:np.array, training_labels:np.array, level_item_memory:np.array, id_item_memory:np.array, vsa:np.str_):
+def retrain_analog(associative_memory:np.array, encoded_dataset:np.array, training_labels:np.array, vsa:np.str_):
 
-    predicted_labels                = np.empty(np.shape(training_dataset)[0], np.int_)
-    number_of_feature_vectors       = np.shape(training_dataset)[0]
-    number_of_dimensions            = np.shape(associative_memory)[1]
-    encoded_dataset                 = np.empty((number_of_feature_vectors, number_of_dimensions), np.int_)
+    predicted_labels                = np.empty(np.shape(training_labels), np.int_)
     non_binary_associative_memory   = np.empty(np.shape(associative_memory), np.int_)
-
-    # Pre-Encode Dataset
-    for index, feature_vector in enumerate(training_dataset):
-        encoded_dataset[index] = encode_analog(feature_vector, level_item_memory, id_item_memory, vsa)
 
     # Classify And Store Predicted Labels.
     for index, encoded_feature_vector in enumerate(encoded_dataset):
@@ -123,7 +126,6 @@ def retrain_analog(associative_memory:np.array, training_dataset:np.array, train
     miss_indeces         = np.where(scoreboard == False)
 
     # Get Non-Binarized, Retrained Associative Memory.
-
     non_binary_associative_memory = np.copy(associative_memory)
 
     for miss_index in miss_indeces:
@@ -133,31 +135,44 @@ def retrain_analog(associative_memory:np.array, training_dataset:np.array, train
 
         non_binary_associative_memory[correct_class]       = np.add(associative_memory[correct_class], bad_query)
         non_binary_associative_memory[mispredicted_class]  = np.subtract(associative_memory[mispredicted_class], bad_query)
-
     
     return binarize(non_binary_associative_memory, vsa)
 
-def train_analog(
-    training_features:np.array,
-    training_labels:np.array,
-    number_of_classes:np.int_,
-    id_item_memory:np.array,
-    level_item_memory:np.array,
-    vsa:np.str_
-) -> np.array:
-    dimensionality          = np.shape(id_item_memory)[1]
-    associative_memory      = np.empty((number_of_classes, dimensionality), np.int_)
+#def train_analog(
+#    training_features:np.array,
+#    training_labels:np.array,
+#    number_of_classes:np.int_,
+#    id_item_memory:np.array,
+#    level_item_memory:np.array,
+#    vsa:np.str_
+#) -> np.array:
+#    dimensionality          = np.shape(id_item_memory)[1]
+#    associative_memory      = np.empty((number_of_classes, dimensionality), np.int_)
+#
+#    for current_label in range(number_of_classes):
+#        prototype_hypermatrix = np.empty(dimensionality, dtype = np.int_)
+#
+#        for index, training_label in enumerate(training_labels):
+#            if training_label == current_label:
+#                prototype_hypermatrix = np.vstack((prototype_hypermatrix, encode_analog(training_features[index], level_item_memory, id_item_memory, vsa)))
+#
+#        associative_memory[current_label] = multibundle(prototype_hypermatrix[1:][:], vsa)
+#
+#    return associative_memory
+
+def train_analog(encoded_training_dataset:np.array, training_labels:np.array, number_of_classes:np.int_, number_of_dimensions:np.int_, vsa:np.str_) -> np.array:
+    associative_memory = np.empty((number_of_classes, number_of_dimensions), np.int_)
 
     for current_label in range(number_of_classes):
-        prototype_hypermatrix = np.empty(dimensionality, dtype = np.int_)
+        prototype_hypermatrix = np.empty(number_of_dimensions, np.int_)
 
         for index, training_label in enumerate(training_labels):
             if training_label == current_label:
-                prototype_hypermatrix = np.vstack((prototype_hypermatrix, encode_analog(training_features[index], level_item_memory, id_item_memory, vsa)))
+                prototype_hypermatrix = np.vstack((prototype_hypermatrix, encoded_training_dataset[index]))
 
         associative_memory[current_label] = multibundle(prototype_hypermatrix[1:][:], vsa)
 
-    return associative_memory
+    return associative_memory 
 
 def train_discrete(
     training_features:np.array,
@@ -186,19 +201,32 @@ def train_discrete(
 
     return associative_memory
 
-def test_analog(
-    testing_features:np.array,
-    testing_labels:np.array,
-    associative_memory:np.array,
-    id_item_memory:np.array,
-    level_item_memory:np.array,
-    vsa:np.str_
-) -> np.double:
+#def test_analog(
+#    testing_features:np.array,
+#    testing_labels:np.array,
+#    associative_memory:np.array,
+#    id_item_memory:np.array,
+#    level_item_memory:np.array,
+#    vsa:np.str_
+#) -> np.double:
+#    number_of_hits  = 0
+#    number_of_tests = np.shape(testing_labels)[0]
+#
+#    for index, query_vector in enumerate(testing_features):
+#        query_hypervector   = encode_analog(query_vector, level_item_memory, id_item_memory, vsa)
+#        predicted_class     = classify(query_hypervector, associative_memory, vsa)
+#        actual_class        = testing_labels[index]
+#
+#        if predicted_class == actual_class:
+#            number_of_hits += 1
+#
+#    return number_of_hits / number_of_tests * 100
+
+def test_analog(encoded_testing_dataset:np.array, testing_labels:np.array, associative_memory:np.array, vsa:np.str_) -> np.float_:
     number_of_hits  = 0
     number_of_tests = np.shape(testing_labels)[0]
 
-    for index, query_vector in enumerate(testing_features):
-        query_hypervector   = encode_analog(query_vector, level_item_memory, id_item_memory, vsa)
+    for index, query_hypervector in enumerate(encoded_testing_dataset):
         predicted_class     = classify(query_hypervector, associative_memory, vsa)
         actual_class        = testing_labels[index]
 
