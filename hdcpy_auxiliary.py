@@ -5,6 +5,7 @@ from hdcpy                      import *
 from sklearn.datasets           import fetch_openml
 from sklearn.model_selection    import train_test_split
 from sklearn.preprocessing      import LabelEncoder
+from sklearn.preprocessing import MinMaxScaler
 
 # Replace a feature for another symbol in a dictionary, useful when dealing with
 # string-based datasets, like SPLICE.
@@ -69,6 +70,7 @@ def get_dataset(dataset_name: str, save_directory:str, test_proportion:float):
 
     file_path       = os.path.join(save_directory, f'{dataset_name}.csv')
     label_encoder   = LabelEncoder()
+    feature_scaler  = MinMaxScaler(feature_range = (-1.0, 1.0))
 
     if not os.path.exists(file_path):
         dataset         = fetch_openml(name = dataset_name, version = 1, parser = 'auto')
@@ -79,7 +81,13 @@ def get_dataset(dataset_name: str, save_directory:str, test_proportion:float):
 
         np.savetxt(file_path, dataset_array, delimiter = ',', fmt = '%s')
 
-        return train_test_split(data, target_encoded, test_size = test_proportion)
+        X_train, X_test,
+        y_train, y_test = train_test_split(data, target_encoded, test_size = test_proportion)
+
+        X_train         = feature_scaler.fit_transform(X_train.astype(float))
+        X_test          = feature_scaler.transform(X_test.astype(float))
+
+        return X_train, X_test, y_train, y_test
 
     else:
         dataset_array   = np.genfromtxt(file_path, delimiter = ',', dtype = np.str_)
@@ -87,4 +95,10 @@ def get_dataset(dataset_name: str, save_directory:str, test_proportion:float):
         target          = np.array(dataset_array[:, -1])
         target_encoded  = label_encoder.fit_transform(target)
 
-        return train_test_split(data, target_encoded, test_size = test_proportion)
+        X_train, X_test,
+        y_train, y_test = train_test_split(data, target_encoded, test_size = test_proportion)
+
+        X_train         = feature_scaler.fit_transform(X_train.astype(float))
+        X_test          = feature_scaler.transform(X_test.astype(float))
+
+        return X_train, X_test, y_train, y_test
