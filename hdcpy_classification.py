@@ -55,26 +55,21 @@ def get_base_hypervector(base:np.str_, base_dictionary:dict, base_item_memory:np
 def get_id_hypervector(id:np.uint, id_item_memory:np.array) -> np.array:
     return id_item_memory[id]
 
-def encode_analog(bin_vector:np.array, level_item_memory:np.array, id_item_memory:np.array, vsa:np.str_) -> np.array:
-    number_of_bins      = np.shape(bin_vector)[0]
+def encode_analog(feature_vector:np.array, number_of_features:np.int_, level_item_memory:np.array, id_item_memory:np.array, vsa:np.str_) -> np.array:
+    bind_hypermatrix = np.empty(np.shape(id_item_memory), np.int_)
 
-    if number_of_bins != np.shape(id_item_memory)[0]:
-        raise ValueError(f'Number of bins ({number_of_bins}) and number of IDs ({np.shape(id_item_memory[0])}) do not match.')
-
-    bind_hypermatrix    = np.empty(np.shape(id_item_memory), np.int_)
-
-    for index in range(number_of_bins):
-        bind_hypermatrix[index] = bind(get_id_hypervector(index, id_item_memory), get_level_hypervector(bin_vector[index], level_item_memory), vsa)
+    for index in range(number_of_features):
+        bind_hypermatrix[index] = bind(get_id_hypervector(index, id_item_memory), get_level_hypervector(feature_vector[index], level_item_memory), vsa)
 
     return multibundle(bind_hypermatrix, vsa)
 
-def encode_dataset(dataset:np.array, level_item_memory:np.array, id_item_memory:np.array, vsa:np.str_) -> np.array:
+def encode_dataset(dataset:np.array, number_of_dimensions:np.int_, level_item_memory:np.array, id_item_memory:np.array, vsa:np.str_) -> np.array:
     number_of_feature_vectors   = np.shape(dataset)[0]
-    number_of_dimensions        = np.shape(level_item_memory)[1]
+    number_of_features          = np.shape(dataset)[1]
     encoded_dataset             = np.empty((number_of_feature_vectors, number_of_dimensions), np.int_)
 
     for index, feature_vector in enumerate(dataset):
-        encoded_dataset[index] = encode_analog(feature_vector, level_item_memory, id_item_memory, vsa)
+        encoded_dataset[index] = encode_analog(feature_vector, number_of_features, level_item_memory, id_item_memory, vsa)
 
     return encoded_dataset
 
