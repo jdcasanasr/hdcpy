@@ -81,8 +81,7 @@ def get_dataset(dataset_name: str, save_directory:str, test_proportion:float):
 
         np.savetxt(file_path, dataset_array, delimiter = ',', fmt = '%s')
 
-        X_train, X_test,
-        y_train, y_test = train_test_split(data, target_encoded, test_size = test_proportion)
+        X_train, X_test, y_train, y_test = train_test_split(data, target_encoded, test_size = test_proportion)
 
         X_train         = feature_scaler.fit_transform(X_train.astype(float))
         X_test          = feature_scaler.transform(X_test.astype(float))
@@ -95,8 +94,7 @@ def get_dataset(dataset_name: str, save_directory:str, test_proportion:float):
         target          = np.array(dataset_array[:, -1])
         target_encoded  = label_encoder.fit_transform(target)
 
-        X_train, X_test,
-        y_train, y_test = train_test_split(data, target_encoded, test_size = test_proportion)
+        X_train, X_test, y_train, y_test = train_test_split(data, target_encoded, test_size = test_proportion)
 
         X_train         = feature_scaler.fit_transform(X_train.astype(float))
         X_test          = feature_scaler.transform(X_test.astype(float))

@@ -1,6 +1,9 @@
 from hdcpy              import *
 from hdcpy_auxiliary    import *
 
+def get_number_of_classes(training_features:np.array) -> np.int_:
+    return np.size(np.unique(training_features))
+
 def get_level_hypermatrix(number_of_levels:np.uint, dimensionality:np.uint, vsa:np.str_) -> np.array:
     if vsa not in supported_vsas:
         raise ValueError(f'{vsa} is not a supported VSA.')
