@@ -200,7 +200,7 @@ def train_analog(encoded_training_dataset: np.array, training_labels: np.array, 
     for current_label in range(number_of_classes):
         # Select all vectors corresponding to the current label
         label_mask = (training_labels == current_label)
-        prototype_hypermatrix = encoded_training_dataset[label_mask]
+        prototype_hypermatrix = encoded_training_dataset[label_mask].astype(np.bool_)
 
         # Bundle the prototype_hypermatrix to form the associative memory for the current label
         associative_memory[current_label] = multibundle(prototype_hypermatrix, vsa)

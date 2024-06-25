@@ -5,7 +5,7 @@ from hdcpy                      import *
 from sklearn.datasets           import fetch_openml
 from sklearn.model_selection    import train_test_split
 from sklearn.preprocessing      import LabelEncoder
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing      import MinMaxScaler
 
 # Replace a feature for another symbol in a dictionary, useful when dealing with
 # string-based datasets, like SPLICE.
