@@ -1,4 +1,4 @@
-from modified_hdcpy_bool import *
+from hdcpy import *
 
 dataset                 = 'isolet'
 vsa                     = 'BSC'
