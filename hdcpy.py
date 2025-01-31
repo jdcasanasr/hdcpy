@@ -1,7 +1,7 @@
 import numpy    as np
 import os
 
-from sklearn.datasets           import fetch_openml
+#from sklearn.datasets           import fetch_openml
 from sklearn.model_selection    import train_test_split
 from sklearn.preprocessing      import LabelEncoder
 from sklearn.preprocessing      import MinMaxScaler
@@ -16,10 +16,10 @@ def random_hypervector(dimensionality:np.int_, vsa:np.str_) -> np.array:
         case 'MAP':
             return np.random.choice([-1, 1], size = dimensionality, p = [0.5, 0.5])
 
-def hamming_distance(u:np.array, v:np.array) -> np.float_:
+def hamming_distance(u:np.array, v:np.array) -> np.float64:
     return  np.sum(u != v) / np.shape(u)[0]
 
-def cosine_similarity(u:np.array, v:np.array) -> np.float_:
+def cosine_similarity(u:np.array, v:np.array) -> np.float64:
     return np.dot(u, v) / (np.linalg.norm(u) * np.linalg.norm(v))
 
 def bind(u:np.array, v:np.array, vsa:np.str_) -> np.array:
@@ -85,7 +85,7 @@ def binarize(u:np.array, vsa:np.str_) -> np.array:
         case 'MAP':
             return np.where(u > 0, 1, -1)
 
-def get_dataset(dataset_name:np.str_, save_directory:np.str_, test_proportion:np.float_):
+def get_dataset(dataset_name:np.str_, save_directory:np.str_, test_proportion:np.float64):
     # Ensure the save directory exists
     os.makedirs(save_directory, exist_ok=True)
 
@@ -93,18 +93,18 @@ def get_dataset(dataset_name:np.str_, save_directory:np.str_, test_proportion:np
     label_encoder = LabelEncoder()
     feature_scaler = MinMaxScaler(feature_range=(-1.0, 1.0))
 
-    if not os.path.exists(file_path):
-        # Fetch and save the dataset if it doesn't exist
-        dataset = fetch_openml(name=dataset_name, version=1, as_frame=False)
-        data = dataset.data
-        target = dataset.target
-
-        dataset_array = np.column_stack((data, target))
-        np.savetxt(file_path, dataset_array, delimiter=',', fmt='%s')
+    #if not os.path.exists(file_path):
+    #    # Fetch and save the dataset if it doesn't exist
+    #    dataset = fetch_openml(name=dataset_name, version=1, as_frame=False)
+    #    data = dataset.data
+    #    target = dataset.target
+#
+    #    dataset_array = np.column_stack((data, target))
+    #    np.savetxt(file_path, dataset_array, delimiter=',', fmt='%s')
 
     # Load the dataset from the file
     dataset_array = np.genfromtxt(file_path, delimiter=',', dtype=np.str_)
-    data = dataset_array[:, :-1].astype(np.float_)
+    data = dataset_array[:, :-1]#.astype(np.float64)
     target = dataset_array[:, -1]
     target_encoded = label_encoder.fit_transform(target)
 
@@ -207,7 +207,7 @@ def train_analog(encoded_training_dataset: np.array, training_labels: np.array, 
 
     return associative_memory
 
-def test_analog(encoded_testing_dataset:np.array, testing_labels:np.array, associative_memory:np.array, vsa:np.str_) -> np.float_:
+def test_analog(encoded_testing_dataset:np.array, testing_labels:np.array, associative_memory:np.array, vsa:np.str_) -> np.float64:
     number_of_hits  = 0
     number_of_tests = np.shape(testing_labels)[0]
 
