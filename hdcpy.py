@@ -1,4 +1,5 @@
 import numpy    as np
+import csv
 import os
 
 #from sklearn.datasets           import fetch_openml
@@ -219,3 +220,36 @@ def test_analog(encoded_testing_dataset:np.array, testing_labels:np.array, assoc
             number_of_hits += 1
 
     return number_of_hits / number_of_tests * 100
+
+def save_array_to_csv(array: np.ndarray, filename: str, delimiter: str = ","):
+    """
+    Save a 2D NumPy array to a CSV file.
+    
+    Parameters:
+    array (np.ndarray): The 2D NumPy array to be saved.
+    filename (str): The name of the output CSV file.
+    delimiter (str): The delimiter to use in the CSV file (default is ',').
+    """
+    if array.ndim != 2:
+        raise ValueError("Input array must be 2D")
+    
+    with open(filename, mode='w', newline='') as file:
+        writer = csv.writer(file, delimiter=delimiter)
+        writer.writerows(array)
+
+def load_array_from_csv(filename: str, delimiter: str = ",") -> np.ndarray:
+    """
+    Load a 2D NumPy array from a CSV file.
+    
+    Parameters:
+    filename (str): The name of the CSV file to read.
+    delimiter (str): The delimiter used in the CSV file (default is ',').
+    
+    Returns:
+    np.ndarray: The loaded 2D NumPy array.
+    """
+    with open(filename, mode='r', newline='') as file:
+        reader = csv.reader(file, delimiter=delimiter)
+        data = [list(map(float, row)) for row in reader]
+    
+    return np.array(data)

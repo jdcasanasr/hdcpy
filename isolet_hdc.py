@@ -38,4 +38,9 @@ end_time = time.time()
 
 execution_time = end_time - start_time
 
+# Dump contents.
+save_array_to_csv (id_item_memory, "position_hypermatrix.csv")
+save_array_to_csv (level_item_memory, "level_hypermatrix.csv")
+save_array_to_csv (associative_memory, "associative_hypermatrix.csv")
+
 print(f'{execution_time:0.3f},{dataset},{vsa},{number_of_levels},{number_of_dimensions},{accuracy:0.2f}')
